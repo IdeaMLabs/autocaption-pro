@@ -5,98 +5,107 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AutoCaption Pro – Fast Captions & Translation</title>
   <style>
-    body { font-family: system-ui, Arial, sans-serif; margin: 2rem; max-width: 720px }
-    label { display:block; margin:.6rem 0 .2rem }
-    input, select { width:100%; padding:.6rem; font-size:1rem }
-    button { margin-top:1rem; padding:.8rem 1rem; font-size:1rem }
-    .card { border:1px solid #ddd; border-radius:12px; padding:1rem; }
-    #note { color:#666; font-size:.9rem }
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; max-width: 720px; }
+    h1 { margin-bottom: .25rem; }
+    p.lead { color: #555; margin-top: 0; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 1rem; }
+    label { display: block; margin: .75rem 0 .25rem; }
+    input, select, button { width: 100%; padding: .75rem; font-size: 1rem; border-radius: 10px; border: 1px solid #ccc; }
+    button { cursor: pointer; background: #0a84ff; color: #fff; border: none; margin-top: 1rem; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    #msg { min-height: 1.25rem; }
+    small.hint { color: #777; display: block; margin-top: .25rem; }
   </style>
 </head>
 <body>
   <h1>AutoCaption Pro</h1>
-  <p>Paste your YouTube link → Pay → get a ZIP with aligned <b>SRT</b> + <b>chapters</b> + <b>SEO</b> in ~30–60 min.</p>
+  <p class="lead">Paste your YouTube link → click Continue → we’ll create a session. Next we’ll add PayPal.</p>
 
   <div class="card">
     <form id="orderForm">
       <label for="email">Email (delivery address)</label>
-      <input id="email" name="email" type="email" required />
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email" required />
 
-      <label for="url">YouTube URL</label>
-      <input id="url" name="url" type="url" placeholder="https://www.youtube.com/watch?v=…" required />
+      <label for="video_url">YouTube URL</label>
+      <input id="video_url" type="url" placeholder="https://www.youtube.com/watch?v=…" required />
+      <small class="hint">Use a public, non-age-restricted video.</small>
 
       <label for="tier">Tier</label>
-      <select id="tier" name="tier" required>
+      <select id="tier" required>
         <option value="t10">$19 — up to 10 minutes</option>
         <option value="t30">$39 — up to 30 minutes</option>
         <option value="t5pack">$79 — 5-video pack (≤10m each)</option>
       </select>
 
-      <button type="submit">Continue</button>
-      <div id="note">After this, PayPal button appears here.</div>
-      <div id="paypal-button-container" style="margin-top:1rem;"></div>
+      <button id="continueBtn" type="submit">Continue</button>
+
+      <!-- Message line + (future) PayPal buttons container -->
+      <p id="msg" aria-live="polite" style="margin-top:8px;"></p>
+      <div id="paypal-buttons" style="display:none; margin-top:12px;"></div>
     </form>
   </div>
 
-  <p id="status" aria-live="polite"></p>
-
-  <!-- PayPal SDK (we'll swap client-id to your real one later) -->
-  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&components=buttons"></script>
-
+  <!-- No PayPal SDK yet. We just create the session and show a success message. -->
   <script>
-    // We’ll call /session on the same origin (later routed to the Worker).
+    // Same-origin endpoint provided by your Cloudflare Pages Functions
+    // (functions/session.js)
     const SESSION_ENDPOINT = '/session';
 
-    const form = document.getElementById('orderForm');
-    const statusEl = document.getElementById('status');
-    let sessionId = null;
-    let prices = { t10: 19, t30: 39, t5pack: 79 }; // placeholder display only
+    const $ = sel => document.querySelector(sel);
+    const form   = $('#orderForm');
+    const emailEl = $('#email');
+    const urlEl   = $('#video_url');
+    const tierEl  = $('#tier');
+    const btn     = $('#continueBtn');
+    const msgEl   = $('#msg');
+    const payDiv  = $('#paypal-buttons'); // not used yet
 
-    form.addEventListener('submit', async (e) => {
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      statusEl.textContent = 'Creating session…';
-      const body = {
-        email: form.email.value.trim(),
-        video_url: form.url.value.trim(),
-        tier: form.tier.value
-      };
+      msgEl.style.color = '#000';
+      msgEl.textContent = 'Creating session…';
+      btn.disabled = true;
+
       try {
         const res = await fetch(SESSION_ENDPOINT, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(body)
+          body: JSON.stringify({
+            email: (emailEl?.value || '').trim(),
+            video_url: (urlEl?.value || '').trim(),
+            tier: (tierEl?.value || '').trim()
+          })
         });
-        // Until the Worker exists, this will 404 — that’s OK for now.
-        if (!res.ok) throw new Error('Session endpoint not live yet');
-        const data = await res.json();
-        sessionId = data.session_id;
-        statusEl.textContent = 'Session created. Choose PayPal to pay.';
-        renderPaypal(data.currency || 'USD', data.localized_price || prices[form.tier.value]);
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.session_id) {
+          msgEl.style.color = '#b00020';
+          msgEl.textContent = data.error || 'Unable to create session.';
+          btn.disabled = false;
+          return;
+        }
+
+        // Store for the next steps (PayPal + status page)
+        localStorage.setItem('session_id', data.session_id);
+
+        // Success message
+        msgEl.style.color = '#0a0';
+        msgEl.textContent = `Session created (#${data.session_id.slice(0, 8)}).`;
+
+        // In the next step we’ll reveal PayPal buttons here:
+        // payDiv.style.display = 'block';
+
       } catch (err) {
-        statusEl.textContent = 'Session service not live yet — we’ll wire it in the next step.';
-        // Render PayPal anyway (sandbox/placeholder); won’t capture until we wire webhook.
-        renderPaypal('USD', prices[form.tier.value]);
+        console.error(err);
+        msgEl.style.color = '#b00020';
+        msgEl.textContent = 'Network error. Please try again.';
+      } finally {
+        btn.disabled = false;
       }
     });
-
-    function renderPaypal(currencyCode, value) {
-      document.getElementById('note').style.display = 'none';
-      if (!window.paypal) return;
-      paypal.Buttons({
-        createOrder: (data, actions) => {
-          return actions.order.create({
-            intent: 'CAPTURE',
-            purchase_units: [{
-              amount: { currency_code: currencyCode, value: String(value) },
-              custom_id: sessionId || 'pending-session'
-            }]
-          });
-        },
-        onApprove: () => {
-          statusEl.innerHTML = 'Payment approved. You’ll get an email when processing finishes. <a href="thanks.html">What next?</a>';
-        }
-      }).render('#paypal-button-container');
-    }
   </script>
 </body>
 </html>
+

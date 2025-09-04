@@ -1,2 +1,2 @@
-name: Bootstrap Workflow
+name: bootstrap.yml
 on: [workflow_dispatch]

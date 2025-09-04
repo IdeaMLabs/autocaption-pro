@@ -1,2 +1,2 @@
-name: Claude Agent Workflow
+name: claude-agent.yml
 on: [workflow_dispatch]

@@ -1,0 +1,12 @@
+Extract this ZIP (full-agent-ml-bundle.zip) into the root of your GitHub repository linked to Cloudflare Pages. Commit and push all files to your main branch. In GitHub → Settings → Secrets and Variables → Actions, add: ANTHROPIC_API_KEY (Claude API key), GH_TOKEN (GitHub token with contents:write access), and GH_REPO (format: owner/repo). Optionally add SITE_URL for your production URL. After pushing, Cloudflare will redeploy when it detects the /functions folder. Verify endpoints:
+
+GET /diag → "diag ok"
+
+GET /paypal/notify → "paypal notify GET ok"
+
+POST /paypal/notify with {} → { "error": "missing_fields" }
+
+POST /process with { session_id, video_url } → { state: "processing" }
+
+GET /status?job_id=<id> → { state: "done", transcript: "Hello world transcript" }
+Workflows in .github/workflows will then continuously monitor and self-heal endpoints automatically.

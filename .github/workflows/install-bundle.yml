@@ -1,2 +1,2 @@
-name: Install Bundle Workflow
+name: install-bundle.yml
 on: [workflow_dispatch]

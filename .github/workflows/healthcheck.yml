@@ -1,2 +1,2 @@
-name: Healthcheck Workflow
+name: healthcheck.yml
 on: [workflow_dispatch]

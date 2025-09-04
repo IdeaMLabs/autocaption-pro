@@ -1,0 +1,51 @@
+name: Install Agent Bundle
+on:
+  workflow_dispatch:
+    inputs:
+      bundle_url:
+        description: URL to pages-agent-bundle.zip
+        required: true
+        type: string
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download bundle
+        run: |
+          set -e
+          curl -fsSL "${{ inputs.bundle_url }}" -o /tmp/bundle.zip
+          unzip -o /tmp/bundle.zip -d /tmp/bundle
+          rsync -av /tmp/bundle/ ./
+          
+      - name: Commit bundle
+        run: |
+          git config user.name "pages-agent"
+          git config user.email "pages-agent@users.noreply.github.com"
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes to commit."
+          else
+            git add -A
+            git commit -m "Agent: install bundle (workflows + agent)"
+            git push
+          fi
+          
+      - name: Verify endpoints
+        run: |
+          set -e
+          BASE="${{ vars.SITE_URL || 'https://autocaption-pro.pages.dev' }}"
+          for i in $(seq 1 40); do
+            D=$(curl -fsS "$BASE/diag" || true)
+            N=$(curl -fsS "$BASE/paypal/notify" || true)
+            echo "try $i -> /diag: $D | /paypal/notify: $N"
+            if [ "$D" = "diag ok" ] && echo "$N" | grep -q "paypal notify GET ok"; then
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::error ::Endpoints not responding"; exit 1

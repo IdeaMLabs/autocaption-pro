@@ -1,0 +1,1 @@
+export async function onRequestGet(){return new Response('paypal notify GET ok',{headers:{'content-type':'text/plain'}});}

@@ -1,6 +1,15 @@
-This ZIP contains all necessary files (agent, workflows, functions) to get the Cloudflare Pages Auto-Repair project running. 
-To use it, extract the contents into the root of your GitHub repository connected to Cloudflare Pages. Commit and push all files. 
-In your GitHub repository settings under Secrets and Variables → Actions, add the required secrets: ANTHROPIC_API_KEY (Claude API key), 
-GH_TOKEN (GitHub token with contents:write), and GH_REPO (in owner/repo format). Optionally set SITE_URL as a variable for your production URL. 
-After pushing, Cloudflare will deploy. Verify endpoints: /diag should return 'diag ok', and /paypal/notify should return 'paypal notify GET ok' on GET requests 
-(and return { "error": "missing_fields" } when POSTed an empty JSON). Workflows inside .github/workflows will then continuously verify and self-heal the project. 
+Quick-Start Instructions:
+
+1. Extract this ZIP into the root of your GitHub repository linked to Cloudflare Pages.
+2. Commit and push all files to your `main` branch.
+3. In GitHub → Settings → Secrets and Variables → Actions, add:
+   - ANTHROPIC_API_KEY (Claude API key)
+   - GH_TOKEN (GitHub token with contents:write access)
+   - GH_REPO (format: owner/repo)
+   - (Optional) SITE_URL (your production URL)
+4. Cloudflare will auto-deploy when it sees the /functions folder.
+5. Verify endpoints:
+   - GET /diag → should return "diag ok"
+   - GET /paypal/notify → should return "paypal notify GET ok"
+   - POST /paypal/notify with {} → should return { "error": "missing_fields" }
+6. The workflows in .github/workflows will then continuously monitor and self-heal endpoints automatically.

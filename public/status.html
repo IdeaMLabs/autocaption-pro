@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Order Status</title>
+  <style>body{font-family:system-ui,Arial,sans-serif;margin:2rem;max-width:720px}</style>
+</head>
+<body>
+  <h1>Order Status</h1>
+  <p id="state">Loading…</p>
+  <p id="link"></p>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const jobId = params.get('job_id');
+    if (!jobId) document.getElementById('state').textContent = 'Missing job_id.';
+    const STATUS_ENDPOINT = '/status?job_id=' + encodeURIComponent(jobId);
+
+    async function poll() {
+      try {
+        const res = await fetch(STATUS_ENDPOINT);
+        if (!res.ok) throw new Error();
+        const j = await res.json();
+        document.getElementById('state').textContent = 'Status: ' + (j.state || 'unknown');
+        if (j.state === 'done' && j.result_url) {
+          document.getElementById('link').innerHTML = `<a href="${j.result_url}">Download your files</a>`;
+        }
+      } catch(e) {
+        document.getElementById('state').textContent = 'Waiting for status service…';
+      }
+    }
+    poll(); setInterval(poll, 5000);
+  </script>
+</body>
+</html>

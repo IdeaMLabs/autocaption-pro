@@ -20,7 +20,7 @@
 </head>
 <body>
   <h1>AutoCaption Pro</h1>
-  <p class="lead">Paste your YouTube link → click Continue → we’ll create a session. Next we’ll add PayPal.</p>
+  <p class="lead">Paste your YouTube link → click Continue → we’ll create a session. Then pay with PayPal.</p>
 
   <div class="card">
     <form id="orderForm">
@@ -40,27 +40,88 @@
 
       <button id="continueBtn" type="submit">Continue</button>
 
-      <!-- Message line + (future) PayPal buttons container -->
+      <!-- Message line + PayPal buttons container -->
       <p id="msg" aria-live="polite" style="margin-top:8px;"></p>
       <div id="paypal-buttons" style="display:none; margin-top:12px;"></div>
     </form>
   </div>
 
-  <!-- No PayPal SDK yet. We just create the session and show a success message. -->
+  <!-- PayPal SDK: replace YOUR_SANDBOX_CLIENT_ID with your Sandbox client ID -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AaFBie0sJjcnsLD0YzGy-WqDrZ4gPcH97FzlUhoGNbaDJbumhG5UBS5cVh85PBzR7-UbmzEIyRzBoEkC&currency=USD&intent=CAPTURE"></script>
+
+  <!-- Page script: create session, then render PayPal buttons -->
   <script>
-    // Same-origin endpoint provided by your Cloudflare Pages Functions
-    // (functions/session.js)
+    // Same-origin endpoints (Cloudflare Pages Functions)
     const SESSION_ENDPOINT = '/session';
 
     const $ = sel => document.querySelector(sel);
-    const form   = $('#orderForm');
+    const form    = $('#orderForm');
     const emailEl = $('#email');
     const urlEl   = $('#video_url');
     const tierEl  = $('#tier');
     const btn     = $('#continueBtn');
     const msgEl   = $('#msg');
-    const payDiv  = $('#paypal-buttons'); // not used yet
+    const payDiv  = $('#paypal-buttons');
 
+    // Parse price from the selected tier text (e.g. "$19 — up to 10 minutes")
+    function getAmountFromTier() {
+      const t = tierEl?.selectedOptions?.[0]?.textContent || '';
+      const m = t.match(/\$([0-9]+)/);
+      return m ? m[1] : '19'; // default $19 if parsing fails
+    }
+
+    // Render PayPal Smart Buttons
+    function renderPayPalButtons(session_id, amount, currency = 'USD') {
+      if (!window.paypal) {
+        msgEl.style.color = '#b00020';
+        msgEl.textContent = 'PayPal SDK not loaded.';
+        return;
+      }
+      // Avoid duplicate renders if user clicks twice
+      payDiv.innerHTML = '';
+
+      paypal.Buttons({
+        style: { shape: 'pill', label: 'pay' },
+        createOrder: (data, actions) => {
+          return actions.order.create({
+            purchase_units: [{ amount: { value: String(amount), currency_code: currency } }]
+          });
+        },
+        onApprove: async (data, actions) => {
+          try {
+            const details = await actions.order.capture(); // capture on client for MVP
+            msgEl.style.color = '#0a0';
+            msgEl.textContent = 'Payment received. Finalizing...';
+
+            // Notify backend so /status flips to "paid"
+            await fetch('/paypal/notify', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                session_id,
+                order_id: data.orderID,
+                capture: details
+              })
+            });
+          } catch (err) {
+            console.error(err);
+            msgEl.style.color = '#b00020';
+            msgEl.textContent = 'Could not complete payment. Please try again.';
+            return;
+          }
+
+          // Redirect to per-job status (job_id == session_id)
+          window.location.href = `/status?job_id=${encodeURIComponent(session_id)}`;
+        },
+        onError: (err) => {
+          console.error(err);
+          msgEl.style.color = '#b00020';
+          msgEl.textContent = 'PayPal error. Please try again.';
+        }
+      }).render('#paypal-buttons');
+    }
+
+    // Create session then reveal PayPal buttons
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       msgEl.style.color = '#000';
@@ -79,7 +140,6 @@
         });
 
         const data = await res.json().catch(() => ({}));
-
         if (!res.ok || !data.session_id) {
           msgEl.style.color = '#b00020';
           msgEl.textContent = data.error || 'Unable to create session.';
@@ -87,15 +147,15 @@
           return;
         }
 
-        // Store for the next steps (PayPal + status page)
-        localStorage.setItem('session_id', data.session_id);
+        const session_id = data.session_id;
+        localStorage.setItem('session_id', session_id);
+        const amount = getAmountFromTier();
 
-        // Success message
         msgEl.style.color = '#0a0';
-        msgEl.textContent = `Session created (#${data.session_id.slice(0, 8)}).`;
+        msgEl.textContent = `Session created (#${session_id.slice(0,8)}). Choose PayPal to pay $${amount}.`;
 
-        // In the next step we’ll reveal PayPal buttons here:
-        // payDiv.style.display = 'block';
+        payDiv.style.display = 'block';
+        renderPayPalButtons(session_id, amount, data.currency || 'USD');
 
       } catch (err) {
         console.error(err);

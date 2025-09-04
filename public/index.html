@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AutoCaption Pro – Fast Captions & Translation</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 2rem; max-width: 720px }
+    label { display:block; margin:.6rem 0 .2rem }
+    input, select { width:100%; padding:.6rem; font-size:1rem }
+    button { margin-top:1rem; padding:.8rem 1rem; font-size:1rem }
+    .card { border:1px solid #ddd; border-radius:12px; padding:1rem; }
+    #note { color:#666; font-size:.9rem }
+  </style>
+</head>
+<body>
+  <h1>AutoCaption Pro</h1>
+  <p>Paste your YouTube link → Pay → get a ZIP with aligned <b>SRT</b> + <b>chapters</b> + <b>SEO</b> in ~30–60 min.</p>
+
+  <div class="card">
+    <form id="orderForm">
+      <label for="email">Email (delivery address)</label>
+      <input id="email" name="email" type="email" required />
+
+      <label for="url">YouTube URL</label>
+      <input id="url" name="url" type="url" placeholder="https://www.youtube.com/watch?v=…" required />
+
+      <label for="tier">Tier</label>
+      <select id="tier" name="tier" required>
+        <option value="t10">$19 — up to 10 minutes</option>
+        <option value="t30">$39 — up to 30 minutes</option>
+        <option value="t5pack">$79 — 5-video pack (≤10m each)</option>
+      </select>
+
+      <button type="submit">Continue</button>
+      <div id="note">After this, PayPal button appears here.</div>
+      <div id="paypal-button-container" style="margin-top:1rem;"></div>
+    </form>
+  </div>
+
+  <p id="status" aria-live="polite"></p>
+
+  <!-- PayPal SDK (we'll swap client-id to your real one later) -->
+  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&components=buttons"></script>
+
+  <script>
+    // We’ll call /session on the same origin (later routed to the Worker).
+    const SESSION_ENDPOINT = '/session';
+
+    const form = document.getElementById('orderForm');
+    const statusEl = document.getElementById('status');
+    let sessionId = null;
+    let prices = { t10: 19, t30: 39, t5pack: 79 }; // placeholder display only
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.textContent = 'Creating session…';
+      const body = {
+        email: form.email.value.trim(),
+        video_url: form.url.value.trim(),
+        tier: form.tier.value
+      };
+      try {
+        const res = await fetch(SESSION_ENDPOINT, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        // Until the Worker exists, this will 404 — that’s OK for now.
+        if (!res.ok) throw new Error('Session endpoint not live yet');
+        const data = await res.json();
+        sessionId = data.session_id;
+        statusEl.textContent = 'Session created. Choose PayPal to pay.';
+        renderPaypal(data.currency || 'USD', data.localized_price || prices[form.tier.value]);
+      } catch (err) {
+        statusEl.textContent = 'Session service not live yet — we’ll wire it in the next step.';
+        // Render PayPal anyway (sandbox/placeholder); won’t capture until we wire webhook.
+        renderPaypal('USD', prices[form.tier.value]);
+      }
+    });
+
+    function renderPaypal(currencyCode, value) {
+      document.getElementById('note').style.display = 'none';
+      if (!window.paypal) return;
+      paypal.Buttons({
+        createOrder: (data, actions) => {
+          return actions.order.create({
+            intent: 'CAPTURE',
+            purchase_units: [{
+              amount: { currency_code: currencyCode, value: String(value) },
+              custom_id: sessionId || 'pending-session'
+            }]
+          });
+        },
+        onApprove: () => {
+          statusEl.innerHTML = 'Payment approved. You’ll get an email when processing finishes. <a href="thanks.html">What next?</a>';
+        }
+      }).render('#paypal-button-container');
+    }
+  </script>
+</body>
+</html>

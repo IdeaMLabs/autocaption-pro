@@ -1,0 +1,23 @@
+name: End-to-End ML Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  test-e2e-ml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Run End-to-End ML Test
+        run: |
+          npm install node-fetch@3
+          node scripts/test-end-to-end-ml.js

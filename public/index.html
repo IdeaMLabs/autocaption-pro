@@ -26,21 +26,18 @@
   <h2>Pay with PayPal</h2>
   <div id="paypal-button-container"></div>
 
-  <!-- ✅ PayPal SDK (use your live Client ID) -->
+  <div id="job-result" style="margin-top:20px; font-weight:bold;"></div>
+
+  <!-- ✅ PayPal SDK (replace with your live client ID) -->
   <script src="https://www.paypal.com/sdk/js?client-id=YOUR_LIVE_CLIENT_ID&currency=USD"></script>
 
   <script>
     paypal.Buttons({
       createOrder: function(data, actions) {
-        const email = document.getElementById("email").value;
-        const videoUrl = document.getElementById("video-url").value;
-
-        // Store job session before payment (optional, can call your Worker here)
-
         return actions.order.create({
           purchase_units: [{
             amount: {
-              value: "1.00"  // ✅ $1 test price
+              value: "1.00" // ✅ $1 fixed test price
             }
           }]
         });
@@ -48,9 +45,8 @@
       onApprove: function(data, actions) {
         return actions.order.capture().then(function(details) {
           console.log("✅ Payment completed by " + details.payer.name.given_name);
-          alert("Payment successful! Order ID: " + data.orderID);
 
-          // Optionally notify your Worker
+          // Call your backend to log payment + start job
           fetch("/paypal/notify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -60,10 +56,27 @@
               video_url: document.getElementById("video-url").value,
               tier: document.getElementById("tier").value
             })
+          })
+          .then(r => r.json())
+          .then(res => {
+            // ✅ Show job ID + link to status
+            if (res.session_id) {
+              document.getElementById("job-result").innerHTML =
+                "✅ Job created!<br>" +
+                "Job ID: " + res.session_id + "<br>" +
+                "<a href='/status?job_id=" + res.session_id + "' target='_blank'>Check Status Here</a>";
+            } else {
+              document.getElementById("job-result").innerHTML =
+                "⚠️ Payment succeeded but job not created. Check logs.";
+            }
+          })
+          .catch(err => {
+            document.getElementById("job-result").innerText =
+              "⚠️ Error creating job: " + err.message;
           });
         });
       }
-    }).render("#paypal-button-container");
+    }).render("#paypal-button-container"); // ✅ This ensures button actually renders
   </script>
 </body>
 </html>

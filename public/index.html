@@ -1,80 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AutoCaption Pro</title>
-
-  <!-- ✅ Load PayPal SDK (replace YOUR_PAYPAL_CLIENT_ID with your real one) -->
-  <script src="https://www.paypal.com/sdk/js?client-id=AZgmnzECShH00naC9OxKq7fxJK9i2Ft56zlW3Mz-sDaq1ZJITzxWaIJafnulT8SqLVcIHOLgFRVNA6zN&currency=USD"></script>
-
+  <!-- Load Stripe.js -->
+  <script src="https://js.stripe.com/v3/"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      text-align: center;
-    }
-    form {
-      margin-bottom: 20px;
-    }
-    input, select {
-      padding: 10px;
-      width: 300px;
-      margin: 10px 0;
-    }
-    button {
-      padding: 10px 20px;
-      margin-top: 10px;
-    }
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; text-align: center; }
+    input, select { width: 90%; padding: 10px; margin: 10px 0; }
+    button { padding: 10px 20px; margin-top: 20px; font-size: 1rem; cursor: pointer; }
   </style>
 </head>
 <body>
   <h1>AutoCaption Pro</h1>
   <p>Upload your video link, pay securely, and receive your transcript.</p>
 
-  <!-- ✅ Form -->
+  <!-- Form -->
   <form id="order-form">
-    <div>
-      <label>Email:</label><br>
-      <input type="email" id="email" placeholder="you@example.com" required />
-    </div>
-    <div>
-      <label>YouTube URL:</label><br>
-      <input type="url" id="video_url" placeholder="https://www.youtube.com/watch?v=..." required />
-    </div>
-    <div>
-      <label>Tier:</label><br>
-      <select id="tier">
-        <option value="test">$1 — test mode (up to 10 minutes)</option>
-      </select>
-    </div>
+    <label>Email:</label><br>
+    <input type="email" id="email" required placeholder="you@example.com"><br>
+
+    <label>YouTube URL:</label><br>
+    <input type="url" id="video_url" required placeholder="https://www.youtube.com/watch?v=..."><br>
+
+    <label>Tier:</label><br>
+    <select id="tier">
+      <option value="1">$1 — Test Tier (up to 10 minutes)</option>
+      <option value="19">$19 — Standard Tier</option>
+    </select>
   </form>
 
-  <!-- ✅ PayPal button will render here -->
-  <div id="paypal-button-container"></div>
+  <!-- Checkout Button -->
+  <button id="checkout-button">Pay with Stripe</button>
 
   <script>
-    paypal.Buttons({
-      createOrder: function(data, actions) {
-        // Create the PayPal order
-        return actions.order.create({
-          purchase_units: [{
-            amount: {
-              value: '1.00' // Test price
-            }
-          }]
-        });
-      },
-      onApprove: function(data, actions) {
-        // Capture payment
-        return actions.order.capture().then(function(details) {
-          alert('✅ Payment completed by ' + details.payer.name.given_name);
+    const stripe = Stripe("YOUR_STRIPE_PUBLIC_KEY"); // Replace with your publishable key
 
-          // ✅ Redirect user to /status page with orderID
-          window.location.href = '/status?job_id=' + data.orderID;
-        });
-      }
-    }).render('#paypal-button-container'); // ✅ Render PayPal button
+    document.getElementById("checkout-button").addEventListener("click", function() {
+      const email = document.getElementById("email").value;
+      const videoUrl = document.getElementById("video_url").value;
+      const tier = document.getElementById("tier").value;
+
+      fetch("/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, video_url: videoUrl, tier })
+      })
+      .then(res => res.json())
+      .then(session => stripe.redirectToCheckout({ sessionId: session.id }))
+      .catch(err => alert("Error: " + err.message));
+    });
   </script>
 </body>
 </html>
+

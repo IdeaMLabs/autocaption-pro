@@ -1,0 +1,16 @@
+name: Guardrail Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate soft cap
+        run: |
+          curl -X POST https://autocaption-pro.pages.dev/process             -H 'Content-Type: application/json'             -d '{"session_id":"test","video_url":"https://youtu.be/test","tier":"10min"}'
+
+      - name: Simulate hard cap
+        run: |
+          curl -X POST https://autocaption-pro.pages.dev/process             -H 'Content-Type: application/json'             -d '{"session_id":"test","video_url":"https://youtu.be/test","tier":"10min"}'

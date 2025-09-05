@@ -1,27 +1,48 @@
-// GET /status?job_id=...
-const CORS = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET,OPTIONS',
-  'access-control-allow-headers': 'content-type',
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const jobId = url.searchParams.get("job_id");
+
+    if (!jobId) {
+      return new Response(JSON.stringify({ error: "missing job_id" }), {
+        headers: { "content-type": "application/json" },
+        status: 400,
+      });
+    }
+
+    try {
+      // Call Stripe's API directly
+      const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${jobId}`, {
+        headers: {
+          Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+        },
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        return new Response(JSON.stringify({ error: "Stripe error", details: err }), {
+          headers: { "content-type": "application/json" },
+          status: 500,
+        });
+      }
+
+      const data = await res.json();
+
+      // Return useful info
+      return new Response(JSON.stringify({
+        state: data.payment_status,
+        email: data.customer_details?.email || null,
+        amount: data.amount_total / 100,
+        currency: data.currency,
+      }), {
+        headers: { "content-type": "application/json" },
+      });
+    } catch (err) {
+      return new Response(JSON.stringify({ error: "server error", details: err.message }), {
+        headers: { "content-type": "application/json" },
+        status: 500,
+      });
+    }
+  },
 };
 
-export async function onRequestOptions() {
-  return new Response(null, { headers: CORS });
-}
-
-export async function onRequestGet({ request, env }) {
-  const url = new URL(request.url);
-  const job_id = url.searchParams.get('job_id');
-  if (!job_id) return json({ error: 'missing_job_id' }, 400);
-
-  const job = await env.KV_STORE.get(`job:${job_id}`, { type: 'json' });
-  if (!job) return json({ state: 'unknown' });
-  return json({ state: job.state || 'unknown', result_url: job.result_url || null });
-}
-
-function json(obj, status = 200) {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: { 'content-type': 'application/json; charset=utf-8', ...CORS },
-  });
-}

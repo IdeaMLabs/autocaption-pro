@@ -1,0 +1,14 @@
+Agent Instructions: Stripe Status Update
+
+1. Replace functions/status.js with the provided version.
+2. Commit and push to GitHub so Cloudflare Pages redeploys automatically.
+3. Perform a Stripe test checkout using:
+   - Card: 4242 4242 4242 4242
+   - Exp: any future date
+   - CVC: any 3 digits
+   - ZIP: any 5 digits
+4. Copy the returned job_id (Stripe session id).
+5. Visit /status?job_id=<id> on your deployed site.
+6. Confirm it shows { "state": "paid" } with email, amount, and currency.
+
+This ensures Stripe payment → status verification → processing flow is working.

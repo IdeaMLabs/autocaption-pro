@@ -1,83 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>AutoCaption Pro</title>
+  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_SANDBOX_CLIENT_ID&currency=USD"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; }
+    label { display: block; margin-top: 1rem; font-weight: bold; }
+    input, select { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
+    #paypal-button-container { margin-top: 2rem; }
+    .success { margin-top: 1rem; color: green; }
+  </style>
 </head>
 <body>
   <h1>AutoCaption Pro</h1>
   <p>Upload your video link, pay securely, and receive your transcript.</p>
 
-  <!-- Simple form -->
-  <form id="job-form">
-    <label>Email:</label><br />
-    <input type="email" id="email" required /><br /><br />
+  <label>Email:</label>
+  <input type="email" id="email" placeholder="you@example.com">
 
-    <label>YouTube URL:</label><br />
-    <input type="url" id="video-url" required /><br /><br />
+  <label>YouTube URL:</label>
+  <input type="url" id="youtube" placeholder="https://www.youtube.com/watch?v=...">
 
-    <label>Tier:</label><br />
-    <select id="tier">
-      <option value="1">Test Tier ($1.00)</option>
-    </select>
-  </form>
+  <label>Tier:</label>
+  <select id="tier">
+    <option value="1">$1 — test mode (up to 10 minutes)</option>
+    <option value="19">$19 — up to 10 minutes</option>
+  </select>
 
-  <h2>Pay with PayPal</h2>
   <div id="paypal-button-container"></div>
-
-  <div id="job-result" style="margin-top:20px; font-weight:bold;"></div>
-
-  <!-- ✅ PayPal SDK (replace with your live client ID) -->
-  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_LIVE_CLIENT_ID&currency=USD"></script>
+  <div id="result" class="success"></div>
 
   <script>
     paypal.Buttons({
       createOrder: function(data, actions) {
+        const email = document.getElementById('email').value;
+        const youtube = document.getElementById('youtube').value;
+        const tier = document.getElementById('tier').value;
+
         return actions.order.create({
           purchase_units: [{
-            amount: {
-              value: "1.00" // ✅ $1 fixed test price
-            }
+            amount: { value: tier },
+            description: `AutoCaption Pro order for ${email}, video: ${youtube}`
           }]
         });
       },
       onApprove: function(data, actions) {
         return actions.order.capture().then(function(details) {
-          console.log("✅ Payment completed by " + details.payer.name.given_name);
-
-          // Call your backend to log payment + start job
-          fetch("/paypal/notify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderID: data.orderID,
-              email: document.getElementById("email").value,
-              video_url: document.getElementById("video-url").value,
-              tier: document.getElementById("tier").value
-            })
-          })
-          .then(r => r.json())
-          .then(res => {
-            // ✅ Show job ID + link to status
-            if (res.session_id) {
-              document.getElementById("job-result").innerHTML =
-                "✅ Job created!<br>" +
-                "Job ID: " + res.session_id + "<br>" +
-                "<a href='/status?job_id=" + res.session_id + "' target='_blank'>Check Status Here</a>";
-            } else {
-              document.getElementById("job-result").innerHTML =
-                "⚠️ Payment succeeded but job not created. Check logs.";
-            }
-          })
-          .catch(err => {
-            document.getElementById("job-result").innerText =
-              "⚠️ Error creating job: " + err.message;
-          });
+          const jobId = data.orderID;
+          document.getElementById('result').innerHTML = 
+            `✅ Payment completed by ${details.payer.name.given_name}. 
+             <a href="/status?job_id=${jobId}">View job status</a>`;
         });
       }
-    }).render("#paypal-button-container"); // ✅ This ensures button actually renders
+    }).render('#paypal-button-container');
   </script>
 </body>
 </html>
-

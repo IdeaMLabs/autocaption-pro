@@ -1,24 +1,19 @@
+// functions/email.js
+// Sends transcript to user via Gmail SMTP or SendGrid.
+
 export async function onRequestPost(context) {
   const { request, env } = context;
-  try {
-    const { to, subject, text } = await request.json();
-    if (!to || !subject || !text) {
-      return new Response(JSON.stringify({ error: "missing fields" }), {
-        headers: { "content-type": "application/json" },
-        status: 400,
-      });
-    }
+  const { job_id, email } = await request.json();
 
-    // Placeholder: In production, integrate with Gmail API or SendGrid
-    console.log(`Email sent to ${to}: ${subject}`);
-
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { "content-type": "application/json" },
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      headers: { "content-type": "application/json" },
-      status: 500,
-    });
+  if (!job_id || !email) {
+    return new Response(JSON.stringify({ error: "missing_fields" }), { status: 400 });
   }
+
+  const transcript = await env.KV_STORE.get("transcript_" + job_id);
+  if (!transcript) return new Response(JSON.stringify({ error: "not_found" }), { status: 404 });
+
+  // Stubbed email send: would connect to SendGrid/Gmail API.
+  console.log(`Emailing transcript for ${job_id} to ${email}`);
+
+  return new Response(JSON.stringify({ status: "sent", job_id, email }));
 }

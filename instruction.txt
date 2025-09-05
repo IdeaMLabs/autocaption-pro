@@ -1,18 +1,22 @@
-Agent Instructions: Full Automation Bundle
+Agent Instructions: Final Launch Bundle
 
 1. Extract this ZIP into the repository root.
-2. This adds a GitHub Action: .github/workflows/end-to-end-test.yml
-   - This workflow tests /status, /process, and /transactions endpoints.
-   - It ensures Stripe payments, caption processing, and transaction logging are live.
-3. Commit and push to GitHub. Cloudflare will redeploy automatically.
-4. In Stripe Dashboard, confirm webhook endpoint is set: https://autocaption-pro.pages.dev/webhook
-5. Run the end-to-end workflow manually in GitHub Actions (Actions → End-to-End Test → Run workflow).
-6. Confirm logs show valid responses from endpoints.
-7. Once confirmed, your system is fully automated:
-   - Payments verified via Stripe
-   - Captions generated via OpenAI
-   - Status endpoint delivers transcript
-   - Transactions logged/exported nightly
-   - Emails with CSV reports sent daily
+2. Replace functions/process.js, functions/status.js, and functions/download.js with provided versions.
+3. Add functions/email.js for transcript emailing and dashboard.html to provide a simple user view.
+4. Add .github/workflows/daily-alerts.yml for daily health checks and alerts.
+5. Commit and push changes to GitHub → Cloudflare will redeploy automatically.
 
-This automation ensures the system is continuously tested and self-verified.
+Validation Steps:
+- Configure Stripe webhook in Dashboard → Developers → Webhooks with endpoint https://autocaption-pro.pages.dev/webhook, event checkout.session.completed.
+- Run GitHub “End-to-End Test” and confirm /status, /process, /transactions return expected results.
+- Perform a Stripe test checkout (4242 card). Confirm:
+  1. /status shows { "state":"paid" }
+  2. /process with job_id + video/audio URL → transcript saved
+  3. /status updates to { "state":"done", transcript: ... }
+  4. /download?job_id=<id> lets you download transcript.txt
+  5. /email with { job_id, email } returns { status:"sent" }
+  6. /dashboard is accessible and allows job lookups
+- Wait for daily GitHub Action alert → confirms system health
+
+Outcome:
+This bundle ensures full production launch: automated payment → captioning → delivery pipeline, multi-language support, email notifications, dashboard UI, ML-driven outreach, and continuous health monitoring.

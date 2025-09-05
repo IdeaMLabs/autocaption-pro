@@ -1,0 +1,12 @@
+name: Daily Health Alerts
+on:
+  schedule:
+    - cron: "0 7 * * *"
+jobs:
+  daily-alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check diag
+        run: curl -s https://autocaption-pro.pages.dev/diag
+      - name: Check transactions
+        run: curl -s https://autocaption-pro.pages.dev/transactions

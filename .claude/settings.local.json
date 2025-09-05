@@ -8,7 +8,9 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(python:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git remote add:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

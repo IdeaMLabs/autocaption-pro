@@ -1,0 +1,29 @@
+name: Export Transactions
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # runs every day at midnight UTC
+  workflow_dispatch:      # allows manual run
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Fetch transactions
+        run: |
+          mkdir -p exports
+          curl -s https://autocaption-pro.pages.dev/transactions?format=csv \
+            -o exports/transactions-$(date +%Y-%m-%d).csv
+
+      - name: Commit and push
+        run: |
+          git config user.name "AutoExport Bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add exports/
+          git commit -m "Daily export $(date +%Y-%m-%d)" || echo "No changes"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

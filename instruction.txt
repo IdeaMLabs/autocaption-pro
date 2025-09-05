@@ -1,28 +1,27 @@
-Agent Instruction: Stripe Transactions + Webhook + Daily Export + Emailer
+Agent Instruction: Final Deployment Bundle (Stripe + Captions + Exports + Email)
 
 1. Extract this ZIP into the repository root.
-2. Add the provided files:
-   - functions/transactions.js
-   - functions/webhook.js
-   - .github/workflows/export-transactions.yml
-   - .github/workflows/email-transactions.yml
-3. Commit and push changes → confirm Cloudflare redeploy succeeds.
-4. In Stripe Dashboard → Developers → Webhooks, add endpoint:
-   https://autocaption-pro.pages.dev/webhook
-   - Events to send: checkout.session.completed
-5. Test a Stripe checkout with card 4242 4242 4242 4242 (any valid expiry, CVC, ZIP).
-6. After payment, visit /transactions on the deployed site.
-   Confirm the JSON includes your test payment with {id, email, amount, currency, status}.
-7. Verify /webhook is receiving events and storing them in KV automatically.
-8. GitHub Action export-transactions.yml will run nightly (midnight UTC) and push transactions.csv into the repo.
-9. GitHub Action email-transactions.yml will run daily at 6am UTC and email transactions.csv to the address set in RECIPIENT_EMAIL secret.
+2. Replace/add the following files:
+   - functions/process.js (handles caption job creation via OpenAI Whisper)
+   - functions/status.js (checks Stripe payment + retrieves transcript if ready)
+   - functions/email.js (placeholder for emailing transcripts to users)
+   - functions/transactions.js (lists Stripe transactions from KV)
+   - functions/webhook.js (Stripe webhook for completed payments)
+   - .github/workflows/export-transactions.yml (nightly CSV export)
+   - .github/workflows/email-transactions.yml (emails CSV daily)
+3. Commit and push changes to GitHub → confirm Cloudflare redeploy.
+4. In Stripe Dashboard → Webhooks → add https://autocaption-pro.pages.dev/webhook (event: checkout.session.completed).
+5. Run Stripe test checkout with card 4242 4242 4242 4242 → confirm /status?job_id=<session_id> returns {"state":"paid"}.
+6. Submit job to /process with {session_id, video_url}. Transcript will be generated and stored in KV.
+7. Check /status again → transcript should now be visible when state="paid".
+8. Optionally test /email by posting {to, subject, text} to send transcript via email (configure with Gmail or SendGrid later).
+9. Verify /transactions endpoint returns JSON of payments.
+10. Verify GitHub Actions export-transactions.yml generates nightly transactions.csv.
+11. Verify GitHub Actions email-transactions.yml emails CSV daily at 6am UTC.
 
-Secrets required in GitHub:
-- GMAIL_USER: your Gmail address
-- GMAIL_PASS: App Password generated in Google Account
-- RECIPIENT_EMAIL: your destination email
-
-This ensures:
-- Every Stripe payment is logged into KV automatically.
-- A daily CSV is generated and committed to repo.
-- A copy of the CSV is emailed each morning automatically.
+This completes the system:
+- Payments confirmed by Stripe.
+- Captions processed via OpenAI Whisper API.
+- Results delivered via /status and optionally email.
+- Transactions logged, exported, and emailed daily.
+- AI/ML pipeline uses data to refine outreach autonomously.

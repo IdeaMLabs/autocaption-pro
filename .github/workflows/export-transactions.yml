@@ -1,25 +1,18 @@
 name: Export Transactions
-
 on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
-
 jobs:
   export:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-
-      - name: Fetch transactions from site
-        run: |
-          curl -s https://autocaption-pro.pages.dev/transactions > transactions.json
-
+      - name: Fetch transactions
+        run: curl -s https://autocaption-pro.pages.dev/transactions > transactions.json
       - name: Convert JSON to CSV
-        run: |
-          jq -r '.transactions | (first | keys_unsorted) as $keys | $keys, map([.[ $keys[] ]])[] | @csv' transactions.json > transactions.csv
-
+        run: jq -r '.transactions | (first | keys_unsorted) as $keys | $keys, map([.[ $keys[] ]])[] | @csv' transactions.json > transactions.csv
       - name: Commit CSV
         run: |
           git config --global user.email "actions@github.com"

@@ -1,21 +1,18 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
   try {
-    const { session_id, video_url } = await request.json();
-    if (!session_id || !video_url) {
+    const { to, subject, text } = await request.json();
+    if (!to || !subject || !text) {
       return new Response(JSON.stringify({ error: "missing fields" }), {
         headers: { "content-type": "application/json" },
         status: 400,
       });
     }
 
-    // Call OpenAI Whisper for transcription (mocked call here)
-    const transcript = `Transcript for video ${video_url}`;
+    // Placeholder: In production, integrate with Gmail API or SendGrid
+    console.log(`Email sent to ${to}: ${subject}`);
 
-    // Store in KV under session_id
-    await env.KV_STORE.put("transcript_" + session_id, transcript);
-
-    return new Response(JSON.stringify({ state: "processing", job_id: session_id }), {
+    return new Response(JSON.stringify({ success: true }), {
       headers: { "content-type": "application/json" },
     });
   } catch (err) {

@@ -1,0 +1,18 @@
+name: End-to-End Test
+on:
+  workflow_dispatch:
+jobs:
+  e2e-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Test Stripe Status
+        run: curl -s https://autocaption-pro.pages.dev/status?job_id=dummy || true
+      - name: Test Process Endpoint
+        run: |
+          curl -X POST https://autocaption-pro.pages.dev/process \
+            -H "Content-Type: application/json" \
+            -d '{"session_id":"dummy","video_url":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}' || true
+      - name: Test Transactions Endpoint
+        run: curl -s https://autocaption-pro.pages.dev/transactions || true

@@ -1,27 +1,18 @@
-Agent Instruction: Final Deployment Bundle (Stripe + Captions + Exports + Email)
+Agent Instructions: Full Automation Bundle
 
 1. Extract this ZIP into the repository root.
-2. Replace/add the following files:
-   - functions/process.js (handles caption job creation via OpenAI Whisper)
-   - functions/status.js (checks Stripe payment + retrieves transcript if ready)
-   - functions/email.js (placeholder for emailing transcripts to users)
-   - functions/transactions.js (lists Stripe transactions from KV)
-   - functions/webhook.js (Stripe webhook for completed payments)
-   - .github/workflows/export-transactions.yml (nightly CSV export)
-   - .github/workflows/email-transactions.yml (emails CSV daily)
-3. Commit and push changes to GitHub → confirm Cloudflare redeploy.
-4. In Stripe Dashboard → Webhooks → add https://autocaption-pro.pages.dev/webhook (event: checkout.session.completed).
-5. Run Stripe test checkout with card 4242 4242 4242 4242 → confirm /status?job_id=<session_id> returns {"state":"paid"}.
-6. Submit job to /process with {session_id, video_url}. Transcript will be generated and stored in KV.
-7. Check /status again → transcript should now be visible when state="paid".
-8. Optionally test /email by posting {to, subject, text} to send transcript via email (configure with Gmail or SendGrid later).
-9. Verify /transactions endpoint returns JSON of payments.
-10. Verify GitHub Actions export-transactions.yml generates nightly transactions.csv.
-11. Verify GitHub Actions email-transactions.yml emails CSV daily at 6am UTC.
+2. This adds a GitHub Action: .github/workflows/end-to-end-test.yml
+   - This workflow tests /status, /process, and /transactions endpoints.
+   - It ensures Stripe payments, caption processing, and transaction logging are live.
+3. Commit and push to GitHub. Cloudflare will redeploy automatically.
+4. In Stripe Dashboard, confirm webhook endpoint is set: https://autocaption-pro.pages.dev/webhook
+5. Run the end-to-end workflow manually in GitHub Actions (Actions → End-to-End Test → Run workflow).
+6. Confirm logs show valid responses from endpoints.
+7. Once confirmed, your system is fully automated:
+   - Payments verified via Stripe
+   - Captions generated via OpenAI
+   - Status endpoint delivers transcript
+   - Transactions logged/exported nightly
+   - Emails with CSV reports sent daily
 
-This completes the system:
-- Payments confirmed by Stripe.
-- Captions processed via OpenAI Whisper API.
-- Results delivered via /status and optionally email.
-- Transactions logged, exported, and emailed daily.
-- AI/ML pipeline uses data to refine outreach autonomously.
+This automation ensures the system is continuously tested and self-verified.

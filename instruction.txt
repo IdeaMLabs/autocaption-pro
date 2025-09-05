@@ -1,0 +1,28 @@
+Agent Instruction: Stripe Transactions + Webhook + Daily Export + Emailer
+
+1. Extract this ZIP into the repository root.
+2. Add the provided files:
+   - functions/transactions.js
+   - functions/webhook.js
+   - .github/workflows/export-transactions.yml
+   - .github/workflows/email-transactions.yml
+3. Commit and push changes → confirm Cloudflare redeploy succeeds.
+4. In Stripe Dashboard → Developers → Webhooks, add endpoint:
+   https://autocaption-pro.pages.dev/webhook
+   - Events to send: checkout.session.completed
+5. Test a Stripe checkout with card 4242 4242 4242 4242 (any valid expiry, CVC, ZIP).
+6. After payment, visit /transactions on the deployed site.
+   Confirm the JSON includes your test payment with {id, email, amount, currency, status}.
+7. Verify /webhook is receiving events and storing them in KV automatically.
+8. GitHub Action export-transactions.yml will run nightly (midnight UTC) and push transactions.csv into the repo.
+9. GitHub Action email-transactions.yml will run daily at 6am UTC and email transactions.csv to the address set in RECIPIENT_EMAIL secret.
+
+Secrets required in GitHub:
+- GMAIL_USER: your Gmail address
+- GMAIL_PASS: App Password generated in Google Account
+- RECIPIENT_EMAIL: your destination email
+
+This ensures:
+- Every Stripe payment is logged into KV automatically.
+- A daily CSV is generated and committed to repo.
+- A copy of the CSV is emailed each morning automatically.

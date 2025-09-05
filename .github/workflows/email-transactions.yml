@@ -1,0 +1,25 @@
+name: Email Transactions CSV
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # every day at 6am UTC
+  workflow_dispatch:
+
+jobs:
+  email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Send email with CSV
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_PASS }}
+          subject: "Daily Transactions CSV"
+          to: ${{ secrets.RECIPIENT_EMAIL }}
+          from: "AutoCaption <${{ secrets.GMAIL_USER }}>"
+          attachments: transactions.csv

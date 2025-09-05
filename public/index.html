@@ -1,91 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AutoCaption Pro</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2em; }
-    .container { max-width: 600px; margin: auto; }
-    input, select, button { display: block; width: 100%; margin: 1em 0; padding: 0.6em; }
-    #paypal-button-container { margin-top: 1.5em; }
-  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>AutoCaption Pro</h1>
-    <p>Paste your YouTube link → click Continue → we’ll create a session. Next you’ll pay with PayPal.</p>
+  <h1>AutoCaption Pro</h1>
+  <p>Upload your video link, pay securely, and receive your transcript.</p>
 
-    <form id="caption-form">
-      <label>Email (delivery address)</label>
-      <input type="email" id="email" placeholder="you@example.com" required>
+  <!-- Simple form -->
+  <form id="job-form">
+    <label>Email:</label><br />
+    <input type="email" id="email" required /><br /><br />
 
-      <label>YouTube URL</label>
-      <input type="url" id="video_url" placeholder="https://www.youtube.com/watch?v=..." required>
+    <label>YouTube URL:</label><br />
+    <input type="url" id="video-url" required /><br /><br />
 
-      <label>Tier</label>
-      <select id="tier">
-        <option value="10min">$1 — test mode (up to 10 minutes)</option>
-      </select>
+    <label>Tier:</label><br />
+    <select id="tier">
+      <option value="1">Test Tier ($1.00)</option>
+    </select>
+  </form>
 
-      <button type="submit">Continue</button>
-    </form>
+  <h2>Pay with PayPal</h2>
+  <div id="paypal-button-container"></div>
 
-    <div id="paypal-button-container"></div>
-    <div id="status"></div>
-  </div>
-
-  <!-- ✅ Load PayPal Sandbox SDK -->
-  <script src="https://www.paypal.com/sdk/js?client-id=AZgmnzECShH00naC9OxKq7fxJK9i2Ft56zlW3Mz-sDaq1ZJITzxWaIJafnulT8SqLVcIHOLgFRVNA6zN&currency=USD"></script>
+  <!-- ✅ PayPal SDK (use your live Client ID) -->
+  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_LIVE_CLIENT_ID&currency=USD"></script>
 
   <script>
-    let sessionId = null;
+    paypal.Buttons({
+      createOrder: function(data, actions) {
+        const email = document.getElementById("email").value;
+        const videoUrl = document.getElementById("video-url").value;
 
-    document.getElementById('caption-form').addEventListener('submit', async function (e) {
-      e.preventDefault();
+        // Store job session before payment (optional, can call your Worker here)
 
-      const email = document.getElementById('email').value;
-      const video_url = document.getElementById('video_url').value;
-      const tier = document.getElementById('tier').value;
+        return actions.order.create({
+          purchase_units: [{
+            amount: {
+              value: "1.00"  // ✅ $1 test price
+            }
+          }]
+        });
+      },
+      onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+          console.log("✅ Payment completed by " + details.payer.name.given_name);
+          alert("Payment successful! Order ID: " + data.orderID);
 
-      const res = await fetch('/session', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, video_url, tier })
-      });
-      const data = await res.json();
-      sessionId = data.session_id;
-
-      document.getElementById('status').innerText = `Session created (#${sessionId}). Scroll down to pay.`;
-
-      // Render PayPal button
-      paypal.Buttons({
-        createOrder: function(data, actions) {
-          return actions.order.create({
-            purchase_units: [{
-              description: "AutoCaption Pro - Test Order",
-              amount: {
-                currency_code: "USD",
-                value: "1.00"  // ✅ Test price set here
-              }
-            }]
+          // Optionally notify your Worker
+          fetch("/paypal/notify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderID: data.orderID,
+              email: document.getElementById("email").value,
+              video_url: document.getElementById("video-url").value,
+              tier: document.getElementById("tier").value
+            })
           });
-        },
-        onApprove: function(data, actions) {
-          return actions.order.capture().then(function(details) {
-            document.getElementById('status').innerText =
-              `✅ Payment completed by ${details.payer.name.given_name}. Order ID: ${data.orderID}`;
-            
-            // Notify backend
-            fetch('/paypal/notify', {
-              method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ session_id: sessionId, order_id: data.orderID })
-            });
-          });
-        }
-      }).render('#paypal-button-container');
-    });
+        });
+      }
+    }).render("#paypal-button-container");
   </script>
 </body>
 </html>

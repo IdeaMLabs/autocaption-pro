@@ -1,4 +1,12 @@
-export async function onRequestPost(context) {
+export async function onRequest(context) {
+  if (context.request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+  
+  return handlePost(context);
+}
+
+async function handlePost(context) {
   const { env } = context;
   
   try {

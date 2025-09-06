@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stripe Debug Test Page</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+    .test-section { border: 1px solid #ddd; padding: 20px; margin: 20px 0; }
+    button { background: #635bff; color: white; border: none; padding: 15px 30px; border-radius: 4px; cursor: pointer; margin: 10px 0; }
+    .log { background: #f5f5f5; padding: 10px; margin: 10px 0; white-space: pre-wrap; font-family: monospace; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Stripe Payment Debug Page</h1>
+  
+  <div class="test-section">
+    <h2>Step 1: Test Config Endpoint</h2>
+    <button onclick="testConfig()">Test Config</button>
+    <div id="config-log" class="log"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Step 2: Test Stripe Initialization</h2>
+    <button onclick="testStripeInit()">Test Stripe Init</button>
+    <div id="stripe-log" class="log"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Step 3: Test Checkout Session Creation</h2>
+    <button onclick="testCheckoutSession()">Test Checkout</button>
+    <div id="checkout-log" class="log"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Step 4: Full Payment Flow Test</h2>
+    <form id="test-form">
+      <input type="email" id="email" placeholder="Email" value="test@example.com" required><br>
+      <input type="url" id="youtube" placeholder="YouTube URL" value="https://youtube.com/watch?v=test123" required><br>
+      <select id="tier" required>
+        <option value="test">$1 Test Tier</option>
+        <option value="standard">$19 Standard Tier</option>
+      </select><br>
+      <button type="submit">🚀 Full Payment Test</button>
+    </form>
+    <div id="payment-log" class="log"></div>
+  </div>
+
+  <script>
+    let stripeInstance = null;
+    
+    function log(elementId, message, isError = false) {
+      const el = document.getElementById(elementId);
+      const timestamp = new Date().toISOString();
+      const className = isError ? 'error' : 'success';
+      el.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+      console.log(message);
+    }
+    
+    async function testConfig() {
+      const logId = 'config-log';
+      document.getElementById(logId).innerHTML = '';
+      
+      try {
+        log(logId, '🔍 Testing /config endpoint...');
+        
+        const response = await fetch('/config');
+        log(logId, `✅ Response status: ${response.status}`);
+        
+        const config = await response.json();
+        log(logId, `📋 Config response: ${JSON.stringify(config, null, 2)}`);
+        
+        if (config.STRIPE_PUBLISHABLE_KEY) {
+          log(logId, `🔑 Stripe key found: ${config.STRIPE_PUBLISHABLE_KEY.substring(0, 20)}...`);
+          return config.STRIPE_PUBLISHABLE_KEY;
+        } else {
+          log(logId, '❌ No Stripe key in config', true);
+          return null;
+        }
+      } catch (error) {
+        log(logId, `❌ Config test failed: ${error.message}`, true);
+        return null;
+      }
+    }
+    
+    async function testStripeInit() {
+      const logId = 'stripe-log';
+      document.getElementById(logId).innerHTML = '';
+      
+      try {
+        log(logId, '🔍 Testing Stripe initialization...');
+        
+        const stripeKey = await testConfig();
+        if (!stripeKey) {
+          log(logId, '❌ Cannot init Stripe - no key available', true);
+          return false;
+        }
+        
+        if (!stripeKey.startsWith('pk_')) {
+          log(logId, `❌ Invalid key format: ${stripeKey}`, true);
+          return false;
+        }
+        
+        stripeInstance = Stripe(stripeKey);
+        log(logId, '✅ Stripe initialized successfully');
+        log(logId, `🔧 Stripe version: ${stripeInstance._version || 'unknown'}`);
+        
+        return true;
+      } catch (error) {
+        log(logId, `❌ Stripe init failed: ${error.message}`, true);
+        return false;
+      }
+    }
+    
+    async function testCheckoutSession() {
+      const logId = 'checkout-log';
+      document.getElementById(logId).innerHTML = '';
+      
+      try {
+        log(logId, '🔍 Testing checkout session creation...');
+        
+        const testData = {
+          email: "test@example.com",
+          video_url: "https://youtube.com/watch?v=test123",
+          tier: "test"
+        };
+        
+        log(logId, `📤 Sending: ${JSON.stringify(testData, null, 2)}`);
+        
+        const response = await fetch('/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(testData)
+        });
+        
+        log(logId, `📈 Response status: ${response.status}`);
+        log(logId, `📋 Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`);
+        
+        const session = await response.json();
+        log(logId, `📤 Session response: ${JSON.stringify(session, null, 2)}`);
+        
+        if (session.id) {
+          log(logId, `✅ Session created: ${session.id}`);
+          return session;
+        } else {
+          log(logId, `❌ No session ID: ${JSON.stringify(session)}`, true);
+          return null;
+        }
+      } catch (error) {
+        log(logId, `❌ Checkout test failed: ${error.message}`, true);
+        return null;
+      }
+    }
+    
+    document.getElementById('test-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const logId = 'payment-log';
+      document.getElementById(logId).innerHTML = '';
+      
+      try {
+        log(logId, '🚀 Starting full payment flow test...');
+        
+        // Step 1: Initialize Stripe
+        const stripeReady = await testStripeInit();
+        if (!stripeReady || !stripeInstance) {
+          log(logId, '❌ Stripe not ready', true);
+          return;
+        }
+        
+        // Step 2: Create session
+        const email = document.getElementById('email').value;
+        const youtube = document.getElementById('youtube').value;
+        const tier = document.getElementById('tier').value;
+        
+        log(logId, `📋 Form data: ${JSON.stringify({email, youtube, tier}, null, 2)}`);
+        
+        const response = await fetch('/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, video_url: youtube, tier })
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          log(logId, `❌ Server error (${response.status}): ${errorText}`, true);
+          return;
+        }
+        
+        const session = await response.json();
+        log(logId, `✅ Session created: ${session.id}`);
+        
+        // Step 3: Redirect to Stripe
+        log(logId, '🔄 Redirecting to Stripe checkout...');
+        
+        const { error } = await stripeInstance.redirectToCheckout({
+          sessionId: session.id
+        });
+        
+        if (error) {
+          log(logId, `❌ Stripe redirect failed: ${error.message}`, true);
+        } else {
+          log(logId, '✅ Should redirect to Stripe now...');
+        }
+        
+      } catch (error) {
+        log(logId, `❌ Payment flow failed: ${error.message}`, true);
+        console.error('Full error:', error);
+      }
+    });
+    
+    // Auto-run tests on page load
+    window.addEventListener('load', () => {
+      console.log('🔧 Debug page loaded - run tests manually or use the Full Payment Test');
+    });
+  </script>
+</body>
+</html>

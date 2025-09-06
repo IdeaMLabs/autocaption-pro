@@ -102,17 +102,3 @@ export async function onRequestPost(context) {
   }
 }
 
-// Handle unsupported methods
-export async function onRequest(context) {
-  const method = context.request.method;
-  if (method === 'GET') return onRequestGet(context);
-  if (method === 'POST') return onRequestPost(context);
-  
-  return new Response(JSON.stringify({ 
-    error: "Method not allowed",
-    allowed: ["GET", "POST"]
-  }), {
-    status: 405,
-    headers: { "Content-Type": "application/json" }
-  });
-}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Payment Successful - AutoCaption Pro</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
+    .success { color: #28a745; font-size: 24px; margin-bottom: 20px; }
+    .info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .button { background: #635bff; color: white; text-decoration: none; padding: 15px 30px; border-radius: 4px; display: inline-block; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="success">✓ Payment Successful!</div>
+  <h1>Thank you for your purchase!</h1>
+  <div class="info">
+    <p>Your payment has been processed successfully. You will receive an email confirmation shortly.</p>
+    <p>Your transcript will be processed and delivered to your email within 24 hours.</p>
+    <p id="session-info"></p>
+  </div>
+  <a href="/" class="button">Return to Home</a>
+
+  <script>
+    // Extract session ID from URL if available
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    if (sessionId) {
+      document.getElementById('session-info').innerHTML = 
+        `<strong>Order ID:</strong> ${sessionId}<br>Please keep this ID for your records.`;
+    }
+  </script>
+</body>
+</html>

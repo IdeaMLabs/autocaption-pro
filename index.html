@@ -2,23 +2,122 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AutoCaption - Stripe Checkout</title>
+  <title>AutoCaption Pro - AI Video Transcription</title>
   <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+    .form-group { margin: 15px 0; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    button { background: #635bff; color: white; border: none; padding: 15px 30px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #5048e5; }
+    .error { color: red; margin-top: 10px; }
+    .loading { display: none; }
+  </style>
 </head>
 <body>
-  <h1>AutoCaption Test Checkout</h1>
-  <button id="checkout-button">Pay $1</button>
+  <h1>AutoCaption Pro</h1>
+  <p>Get AI-powered transcriptions for your YouTube videos</p>
+  
+  <form id="checkout-form">
+    <div class="form-group">
+      <label for="email">Email Address:</label>
+      <input type="email" id="email" name="email" required placeholder="your@email.com">
+    </div>
+    
+    <div class="form-group">
+      <label for="youtube">YouTube Video URL:</label>
+      <input type="url" id="youtube" name="youtube" required placeholder="https://youtube.com/watch?v=...">
+    </div>
+    
+    <div class="form-group">
+      <label for="tier">Select Tier:</label>
+      <select id="tier" name="tier" required>
+        <option value="">Choose a tier...</option>
+        <option value="test">$1 Test Tier</option>
+        <option value="standard">$19 Standard Tier</option>
+      </select>
+    </div>
+    
+    <button type="submit" id="pay-button">
+      <span id="button-text">Pay with Stripe</span>
+      <span id="loading" class="loading">Processing...</span>
+    </button>
+    
+    <div id="error-message" class="error"></div>
+  </form>
 
   <script>
-    const stripe = Stripe("pk_test_12345"); // replace with STRIPE_PUBLISHABLE_KEY
+    // Use environment variable or test key
+    const stripe = Stripe(window.STRIPE_PUBLISHABLE_KEY || "pk_test_51234567890"); 
+    
+    const form = document.getElementById('checkout-form');
+    const payButton = document.getElementById('pay-button');
+    const errorMessage = document.getElementById('error-message');
+    const buttonText = document.getElementById('button-text');
+    const loading = document.getElementById('loading');
 
-    document.getElementById("checkout-button").addEventListener("click", async () => {
-      const response = await fetch("/create-checkout-session", { method: "POST" });
-      const session = await response.json();
-      if (session.id) {
-        stripe.redirectToCheckout({ sessionId: session.id });
-      } else {
-        alert("Failed to create session");
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Clear previous errors
+      errorMessage.textContent = '';
+      
+      // Get form data
+      const email = document.getElementById('email').value;
+      const youtube = document.getElementById('youtube').value;
+      const tier = document.getElementById('tier').value;
+      
+      // Validate inputs
+      if (!email || !youtube || !tier) {
+        errorMessage.textContent = 'Please fill in all fields';
+        return;
+      }
+      
+      // Show loading state
+      payButton.disabled = true;
+      buttonText.style.display = 'none';
+      loading.style.display = 'inline';
+      
+      try {
+        const response = await fetch('/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            video_url: youtube,
+            tier: tier
+          })
+        });
+        
+        const session = await response.json();
+        
+        if (session.error) {
+          throw new Error(session.error);
+        }
+        
+        if (session.id) {
+          // Redirect to Stripe Checkout
+          const { error } = await stripe.redirectToCheckout({
+            sessionId: session.id
+          });
+          
+          if (error) {
+            throw new Error(error.message);
+          }
+        } else {
+          throw new Error('Failed to create checkout session');
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        errorMessage.textContent = err.message || 'Something went wrong. Please try again.';
+      } finally {
+        // Reset button state
+        payButton.disabled = false;
+        buttonText.style.display = 'inline';
+        loading.style.display = 'none';
       }
     });
   </script>

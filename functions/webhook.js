@@ -1,15 +1,3 @@
-// Handle GET requests to webhook endpoint
-export async function onRequestGet(context) {
-  return new Response(JSON.stringify({ 
-    message: "Webhook endpoint is active",
-    methods: ["POST"],
-    purpose: "Stripe webhook handler"
-  }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" }
-  });
-}
-
 // Handle POST requests from Stripe
 export async function onRequestPost(context) {
   const { request, env } = context;

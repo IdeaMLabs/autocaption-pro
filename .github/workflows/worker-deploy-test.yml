@@ -1,0 +1,15 @@
+name: Worker Deploy Test
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Test diag endpoint
+      run: curl -f https://autocaption-worker.YOUR_SUBDOMAIN.workers.dev/diag

@@ -1,6 +1,0 @@
-[
-  {
-    "pattern": "/diag",
-    "script": "functions/diag.js"
-  }
-]

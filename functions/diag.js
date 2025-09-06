@@ -1,5 +1,3 @@
-export async function onRequest() {
-  return new Response('diag ok', { 
-    headers: { 'content-type': 'text/plain' } 
-  });
+export async function onRequestGet() {
+  return new Response('diag ok');
 }

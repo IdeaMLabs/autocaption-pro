@@ -1,0 +1,51 @@
+name: Deploy and Test Full Pipeline
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Wait for Cloudflare deployment
+      run: |
+        echo "Waiting for Cloudflare Pages deployment..."
+        sleep 60
+        
+    - name: Test diag endpoint
+      run: |
+        curl -f https://autocaption-pro.pages.dev/diag || exit 1
+        echo "✅ Diag endpoint working"
+        
+    - name: Run Stripe test
+      run: |
+        chmod +x scripts/test-stripe.js
+        node scripts/test-stripe.js
+        
+    - name: Run Webhook trigger test
+      run: |
+        chmod +x scripts/trigger-webhook.js
+        node scripts/trigger-webhook.js
+        
+    - name: Run End-to-End ML test
+      run: |
+        chmod +x scripts/test-end-to-end-ml.js
+        node scripts/test-end-to-end-ml.js
+        
+    - name: Verify deployment
+      run: |
+        echo "🎉 Full deployment and all tests completed successfully!"
+        echo "Site URL: https://autocaption-pro.pages.dev"

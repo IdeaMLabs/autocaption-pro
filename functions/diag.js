@@ -1,7 +1,5 @@
-export default {
-  async fetch(request, env, ctx) {
-    return new Response('diag ok', {
-      headers: { 'Content-Type': 'text/plain' }
-    });
-  }
+export async function onRequest(context) {
+  return new Response(JSON.stringify({ status: "ok" }), {
+    headers: { "Content-Type": "application/json" }
+  });
 }

@@ -1,0 +1,19 @@
+name: Stripe Debug Workflow
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+
+jobs:
+  test-stripe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install deps
+        run: npm install node-fetch
+      - name: Run webhook trigger
+        run: node scripts/trigger-webhook.js

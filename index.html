@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AutoCaption - Stripe Checkout</title>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+  <h1>AutoCaption Test Checkout</h1>
+  <button id="checkout-button">Pay $1</button>
+
+  <script>
+    const stripe = Stripe("pk_test_12345"); // replace with STRIPE_PUBLISHABLE_KEY
+
+    document.getElementById("checkout-button").addEventListener("click", async () => {
+      const response = await fetch("/create-checkout-session", { method: "POST" });
+      const session = await response.json();
+      if (session.id) {
+        stripe.redirectToCheckout({ sessionId: session.id });
+      } else {
+        alert("Failed to create session");
+      }
+    });
+  </script>
+</body>
+</html>

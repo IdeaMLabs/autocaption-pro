@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoCaption Pro - System Status</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 2rem auto; 
+            padding: 20px;
+            background: #f5f5f5; 
+        }
+        .status-card { 
+            background: white; 
+            padding: 20px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            border-left: 5px solid #ccc;
+        }
+        .status-ok { border-left-color: #4CAF50; }
+        .status-error { border-left-color: #f44336; }
+        .status-warning { border-left-color: #ff9800; }
+        .endpoint { font-family: monospace; background: #f0f0f0; padding: 2px 6px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🔧 AutoCaption Pro - System Status</h1>
+    
+    <div class="status-card status-error">
+        <h3>❌ Current Issue: Cloudflare Pages Functions Not Deploying</h3>
+        <p>All function endpoints are returning the main HTML page instead of executing. This is a deployment infrastructure issue.</p>
+    </div>
+
+    <div class="status-card status-warning">
+        <h3>🔍 Function Endpoint Tests</h3>
+        <p>Click the buttons below to test each endpoint:</p>
+        
+        <button onclick="testEndpoint('/diag', 'diag-result')">Test /diag</button>
+        <div id="diag-result" class="test-result"></div>
+        
+        <button onclick="testEndpoint('/config', 'config-result')">Test /config</button>
+        <div id="config-result" class="test-result"></div>
+        
+        <button onclick="testEndpoint('/webhook', 'webhook-result')">Test /webhook</button>
+        <div id="webhook-result" class="test-result"></div>
+        
+        <button onclick="testCheckout()">Test Checkout Session</button>
+        <div id="checkout-result" class="test-result"></div>
+        
+        <button onclick="testWebhookPost()">Test Webhook POST</button>
+        <div id="webhook-post-result" class="test-result"></div>
+    </div>
+
+    <div class="status-card status-ok">
+        <h3>✅ What's Working</h3>
+        <ul>
+            <li>Frontend JavaScript and HTML structure</li>
+            <li>Stripe integration code (verified locally)</li>
+            <li>Function code syntax and logic</li>
+            <li>GitHub repository and deployment pipeline</li>
+        </ul>
+    </div>
+
+    <div class="status-card status-warning">
+        <h3>🛠️ Attempted Fixes</h3>
+        <ul>
+            <li>✅ Created wrangler.toml with Node.js compatibility</li>
+            <li>✅ Added package.json with ES modules</li>
+            <li>✅ Created _routes.json for explicit routing</li>
+            <li>✅ Converted functions to export default format</li>
+            <li>✅ Simplified function code to minimal versions</li>
+            <li>✅ Added comprehensive error handling</li>
+        </ul>
+    </div>
+
+    <div class="status-card status-error">
+        <h3>🚨 Next Steps Required</h3>
+        <p>The issue is with Cloudflare Pages deployment configuration:</p>
+        <ol>
+            <li>Check Cloudflare Pages Dashboard → Settings → Functions</li>
+            <li>Verify Functions are enabled for the project</li>
+            <li>Check build logs for function deployment errors</li>
+            <li>Verify environment variables are properly set</li>
+            <li>Consider redeploying the project with functions enabled</li>
+        </ol>
+    </div>
+
+    <div class="status-card status-ok">
+        <h3>💡 Temporary Workaround</h3>
+        <p>Until functions are working, you can test the payment flow with direct Stripe integration:</p>
+        <a href="/test.html">🔗 Go to Direct Payment Test Page</a>
+    </div>
+
+    <script>
+        function testEndpoint(endpoint, resultId) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.innerHTML = '<div class="loading">Testing ' + endpoint + '...</div>';
+            
+            fetch(endpoint)
+                .then(response => {
+                    const contentType = response.headers.get('content-type');
+                    return response.text().then(text => ({ 
+                        status: response.status, 
+                        text, 
+                        contentType 
+                    }));
+                })
+                .then(result => {
+                    if (result.contentType && result.contentType.includes('text/html')) {
+                        resultDiv.innerHTML = '<div class="error">❌ FAILED: Returns HTML instead of function response</div>';
+                    } else if (result.status === 200) {
+                        resultDiv.innerHTML = '<div class="success">✅ SUCCESS: ' + result.text.substring(0, 100) + '</div>';
+                    } else {
+                        resultDiv.innerHTML = '<div class="error">❌ ERROR ' + result.status + ': ' + result.text.substring(0, 100) + '</div>';
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = '<div class="error">❌ NETWORK ERROR: ' + error.message + '</div>';
+                });
+        }
+        
+        function testCheckout() {
+            const resultDiv = document.getElementById('checkout-result');
+            resultDiv.innerHTML = '<div class="loading">Testing checkout session creation...</div>';
+            
+            fetch('/create-checkout-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: 'test@example.com',
+                    video_url: 'https://youtube.com/watch?v=test',
+                    tier: '1'
+                })
+            })
+            .then(response => response.text().then(text => ({ status: response.status, text })))
+            .then(result => {
+                if (result.text.includes('<!DOCTYPE html>')) {
+                    resultDiv.innerHTML = '<div class="error">❌ FAILED: Returns HTML instead of function response</div>';
+                } else if (result.status === 200) {
+                    resultDiv.innerHTML = '<div class="success">✅ SUCCESS: Checkout session created</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ ERROR ' + result.status + ': ' + result.text.substring(0, 100) + '</div>';
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '<div class="error">❌ NETWORK ERROR: ' + error.message + '</div>';
+            });
+        }
+        
+        function testWebhookPost() {
+            const resultDiv = document.getElementById('webhook-post-result');
+            resultDiv.innerHTML = '<div class="loading">Testing webhook POST...</div>';
+            
+            fetch('/webhook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: 'evt_test_123',
+                    type: 'checkout.session.completed',
+                    data: {
+                        object: {
+                            id: 'cs_test_123',
+                            customer_email: 'test@example.com',
+                            amount_total: 100,
+                            currency: 'usd'
+                        }
+                    }
+                })
+            })
+            .then(response => response.text().then(text => ({ status: response.status, text })))
+            .then(result => {
+                if (result.text.includes('<!DOCTYPE html>')) {
+                    resultDiv.innerHTML = '<div class="error">❌ FAILED: Returns HTML instead of function response</div>';
+                } else if (result.status === 200 && result.text === 'OK') {
+                    resultDiv.innerHTML = '<div class="success">✅ SUCCESS: Webhook handled correctly</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ ERROR ' + result.status + ': ' + result.text + '</div>';
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '<div class="error">❌ NETWORK ERROR: ' + error.message + '</div>';
+            });
+        }
+        
+        // Auto-run tests on page load
+        window.onload = function() {
+            setTimeout(() => testEndpoint('/diag', 'diag-result'), 1000);
+            setTimeout(() => testEndpoint('/config', 'config-result'), 2000);
+            setTimeout(() => testEndpoint('/webhook', 'webhook-result'), 3000);
+        };
+    </script>
+</body>
+</html>

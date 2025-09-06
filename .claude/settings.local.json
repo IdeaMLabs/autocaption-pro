@@ -17,7 +17,8 @@
       "Bash(do echo \"=== $file ===\")",
       "Bash(done)",
       "Bash(curl:*)",
-      "Bash(wrangler deploy:*)"
+      "Bash(wrangler deploy:*)",
+      "Bash(wrangler secret put:*)"
     ],
     "deny": [],
     "ask": []

@@ -48,8 +48,8 @@
   </form>
 
   <script>
-    // Use valid Stripe test key - replace with your actual key
-    const stripe = Stripe("pk_test_51Ht4uuI6D6RoXUJXx8l3Nm7Oye1dBzXnW0mL3qJvJrJ8l3Nm7Oye1dBzXnW0mL3qJ00aBCDEFGH"); 
+    let stripe = null;
+    let stripeKey = null;
     
     const form = document.getElementById('checkout-form');
     const payButton = document.getElementById('pay-button');
@@ -57,11 +57,55 @@
     const buttonText = document.getElementById('button-text');
     const loading = document.getElementById('loading');
 
+    // Initialize Stripe when page loads
+    async function initializeStripe() {
+      try {
+        // Fetch Stripe key from server
+        const configResponse = await fetch('/config');
+        const config = await configResponse.json();
+        stripeKey = config.STRIPE_PUBLISHABLE_KEY;
+        
+        if (!stripeKey) {
+          throw new Error('Stripe publishable key not configured');
+        }
+        
+        if (!stripeKey.startsWith('pk_')) {
+          throw new Error('Invalid Stripe publishable key format');
+        }
+        
+        stripe = Stripe(stripeKey);
+        console.log('Stripe initialized with key:', stripeKey.substring(0, 10) + '...');
+        
+        // Enable the form
+        payButton.disabled = false;
+        buttonText.textContent = 'Pay with Stripe';
+        
+      } catch (error) {
+        console.error('Stripe initialization error:', error);
+        errorMessage.textContent = `Payment system error: ${error.message}. Please contact support.`;
+        payButton.disabled = true;
+        buttonText.textContent = 'Payment Unavailable';
+      }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeStripe);
+    
+    // Initially disable button until Stripe is ready
+    payButton.disabled = true;
+    buttonText.textContent = 'Initializing...';
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       // Clear previous errors
       errorMessage.textContent = '';
+      
+      // Check if Stripe is initialized
+      if (!stripe) {
+        errorMessage.textContent = 'Payment system not ready. Please refresh the page.';
+        return;
+      }
       
       // Get form data
       const email = document.getElementById('email').value;

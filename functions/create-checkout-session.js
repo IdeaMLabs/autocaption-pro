@@ -54,11 +54,9 @@ export async function onRequestPost(context) {
         customer_email: email,
         success_url: "https://autocaption-pro.pages.dev/success?session_id={CHECKOUT_SESSION_ID}",
         cancel_url: "https://autocaption-pro.pages.dev/cancel",
-        metadata: JSON.stringify({
-          video_url: video_url,
-          tier: tier,
-          email: email
-        })
+        "metadata[video_url]": video_url,
+        "metadata[tier]": tier,
+        "metadata[email]": email
       }),
     });
 

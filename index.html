@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoCaption Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #f9fafc;
+      color: #222;
+    }
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    header p {
+      font-size: 1.2rem;
+      margin-top: .5rem;
+    }
+    .hero {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+    .hero h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .steps {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 3rem auto;
+      max-width: 900px;
+      text-align: center;
+    }
+    .step {
+      background: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      flex: 1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .step h3 {
+      margin-top: 0;
+    }
+    .cta {
+      text-align: center;
+      margin: 2rem;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .3s;
+    }
+    button:hover {
+      background: #1e4fbf;
+    }
+    footer {
+      background: #f3f4f6;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AutoCaption Pro</h1>
+    <p>Professional captions for YouTubers, powered by AI</p>
+  </header>
+
+  <section class="hero">
+    <h2>Save hours editing. Get captions instantly.</h2>
+    <p>Our AI captions your YouTube videos in 30+ languages. Secure. Fast. Affordable.</p>
+  </section>
+
+  <section class="steps">
+    <div class="step">
+      <h3>1. Checkout</h3>
+      <p>Pay securely with Stripe for your chosen plan.</p>
+    </div>
+    <div class="step">
+      <h3>2. Upload</h3>
+      <p>Paste your YouTube link. No files, no hassle.</p>
+    </div>
+    <div class="step">
+      <h3>3. Download</h3>
+      <p>Receive professional captions ready for upload.</p>
+    </div>
+  </section>
+
+  <div class="cta">
+    <button id="checkout-button">Get Captions – $1 Test</button>
+  </div>
+
+  <footer>
+    <p>© 2025 AutoCaption Pro · Secure payments via Stripe</p>
+  </footer>
+
+  <!-- Stripe.js -->
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    const stripe = Stripe("pk_test_51S41DLK0wxQPIemdaalU9BVg1jjgj9CVioVGDpo76bO9jbAUr8bqACD4j6QA63hJcZX1VlSORYAvGNgtR313hXuX000dSfBOcj");
+    document.getElementById("checkout-button").addEventListener("click", async () => {
+      const res = await fetch("/create-checkout-session", { method: "POST" });
+      const session = await res.json();
+      const result = await stripe.redirectToCheckout({ sessionId: session.id });
+      if (result.error) alert(result.error.message);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+name: Daily CSV Auto-Commit
+
+on:
+  schedule:
+    # Run at 6:15 AM UTC (15 minutes after automation)
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+    inputs:
+      csv_date:
+        description: 'Date for CSV (YYYY-MM-DD)'
+        required: false
+        default: ''
+
+jobs:
+  commit-daily-csv:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Set date
+      id: date
+      run: |
+        if [ -n "${{ github.event.inputs.csv_date }}" ]; then
+          echo "date=${{ github.event.inputs.csv_date }}" >> $GITHUB_OUTPUT
+        else
+          echo "date=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Fetch daily CSV from Worker
+      run: |
+        DATE="${{ steps.date.outputs.date }}"
+        
+        # Create logs directory if it doesn't exist
+        mkdir -p logs/
+        
+        # Fetch CSV from Worker KV via API endpoint
+        curl -s "https://autocaption-worker.ideamlabs.workers.dev/daily-csv?date=${DATE}" \
+          -o "logs/outreach_log_${DATE}.csv" || \
+        echo "timestamp,channel,email,score,status,subject" > "logs/outreach_log_${DATE}.csv"
+        
+        # Verify file was created
+        if [ -f "logs/outreach_log_${DATE}.csv" ]; then
+          echo "✅ CSV file created for ${DATE}"
+          echo "📊 Records: $(( $(wc -l < "logs/outreach_log_${DATE}.csv") - 1 ))"
+        else
+          echo "❌ Failed to create CSV for ${DATE}"
+        fi
+        
+    - name: Commit and push changes
+      run: |
+        DATE="${{ steps.date.outputs.date }}"
+        
+        # Configure git
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Add CSV file
+        git add "logs/outreach_log_${DATE}.csv"
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to commit for ${DATE}"
+          exit 0
+        fi
+        
+        # Commit with automated message
+        git commit -m "📊 Daily outreach log: ${DATE}
+
+        Automated CSV export from ML outreach system
+        Generated at $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+        
+        🤖 Generated with Claude Code
+        Co-Authored-By: Claude <noreply@anthropic.com>"
+        
+        # Push changes
+        git push
+        
+        echo "✅ Successfully committed daily CSV for ${DATE}"
+        
+    - name: Generate summary
+      run: |
+        DATE="${{ steps.date.outputs.date }}"
+        CSV_FILE="logs/outreach_log_${DATE}.csv"
+        
+        if [ -f "$CSV_FILE" ]; then
+          RECORD_COUNT=$(( $(wc -l < "$CSV_FILE") - 1 ))
+          echo "📈 Daily Summary for ${DATE}:"
+          echo "   • Records logged: ${RECORD_COUNT}"
+          echo "   • File: ${CSV_FILE}"
+          echo "   • Committed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+        fi

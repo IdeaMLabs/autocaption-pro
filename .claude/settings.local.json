@@ -16,7 +16,8 @@
       "Bash(for file in functions/*.js)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(done)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(wrangler deploy:*)"
     ],
     "deny": [],
     "ask": []

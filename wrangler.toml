@@ -1,0 +1,14 @@
+name = "autocaption-api"
+main = "_worker.js"
+compatibility_date = "2023-12-01"
+
+[env.production]
+name = "autocaption-api"
+route = { pattern = "api.autocaption-pro.pages.dev/*", zone_name = "pages.dev" }
+
+# You'll need to set these in Cloudflare Dashboard or via wrangler secret
+# [vars]
+# STRIPE_PUBLISHABLE_KEY = "your-publishable-key"
+
+# [secrets]
+# STRIPE_SECRET_KEY = "your-secret-key"

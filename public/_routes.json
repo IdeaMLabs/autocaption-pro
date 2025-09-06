@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "include": [
+    "/diag",
+    "/webhook",
+    "/config", 
+    "/create-checkout-session",
+    "/stripe-webhook"
+  ],
+  "exclude": [
+    "/static/*",
+    "/assets/*"
+  ]
+}

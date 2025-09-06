@@ -1,0 +1,16 @@
+{
+  "name": "autocaption-pro",
+  "version": "1.0.0",
+  "description": "AutoCaption Pro - YouTube video transcription service",
+  "main": "functions/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "dev": "wrangler pages dev public",
+    "deploy": "wrangler pages deploy public"
+  }
+}

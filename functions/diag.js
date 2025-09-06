@@ -1,3 +1,7 @@
-export async function onRequestGet() {
-  return new Response('diag ok');
+export default {
+  async fetch(request, env, ctx) {
+    return new Response('diag ok', {
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  }
 }

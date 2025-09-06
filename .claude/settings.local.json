@@ -10,7 +10,9 @@
       "Bash(python:*)",
       "Bash(node:*)",
       "Bash(git remote add:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "WebFetch(domain:autocaption-pro.pages.dev)",
+      "Bash(gh workflow run:*)"
     ],
     "deny": [],
     "ask": []

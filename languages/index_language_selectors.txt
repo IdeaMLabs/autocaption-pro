@@ -1,0 +1,57 @@
+
+<!-- LANGUAGE SELECTION BLOCK -->
+
+<div class="language-selection">
+  <h3>Language Options</h3>
+
+  <!-- SPOKEN LANGUAGE -->
+  <label for="spoken_lang">Spoken Language in Video:</label>
+  <select id="spoken_lang" name="spoken_lang">
+    <option value="auto" selected>Auto Detect (Whisper decides)</option>
+    <option value="en">English</option>
+    <option value="es">Spanish</option>
+    <option value="fr">French</option>
+    <option value="de">German</option>
+    <option value="zh">Chinese</option>
+    <!-- Add all 99 Whisper-supported languages here -->
+  </select>
+
+  <br><br>
+
+  <!-- CAPTION LANGUAGE -->
+  <label for="caption_lang">Caption Language (Final Output):</label>
+  <select id="caption_lang" name="caption_lang">
+    <option value="en">English</option>
+    <option value="es">Spanish</option>
+    <option value="fr">French</option>
+    <option value="de">German</option>
+    <option value="zh">Chinese</option>
+    <!-- Add all 99 Whisper-supported languages here -->
+  </select>
+
+  <p class="disclaimer">
+    Note: Captions are text only, not voice-over. "Auto Detect" means captions will be generated in the spoken language of your video.
+  </p>
+</div>
+
+<script>
+// Attach selected languages to checkout request
+document.getElementById("checkout-button").addEventListener("click", function() {
+  const spokenLang = document.getElementById("spoken_lang").value;
+  const captionLang = document.getElementById("caption_lang").value;
+
+  fetch("/create-checkout-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ spoken_lang: spokenLang, caption_lang: captionLang })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Error creating checkout session.");
+    }
+  });
+});
+</script>

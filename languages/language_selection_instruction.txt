@@ -1,0 +1,38 @@
+
+LANGUAGE SELECTION INSTRUCTION SET
+
+Overview:
+This instruction set updates your checkout flow to clearly separate SPOKEN LANGUAGE (what the video contains) from CAPTION LANGUAGE (what the customer wants the captions translated into). It ensures Whisper transcription accuracy while avoiding customer confusion about voice-over vs. captions.
+
+Steps for Agent:
+
+1. FRONTEND (index.html)
+- Insert the provided HTML/JS code block from index_language_selectors.txt directly under the payment buttons in index.html.
+- This block creates two dropdown menus: Spoken Language (with "Auto Detect" as default) and Caption Language (99 options).
+- A disclaimer is displayed: "Note: Captions are text only, not voice-over. Auto Detect means captions will be generated in the spoken language of your video."
+
+2. BACKEND (worker.js or functions/process.js)
+- Update the POST /process handler to accept two new fields: spoken_lang and caption_lang.
+- If spoken_lang == "auto": send request to Whisper without specifying language (auto-detect).
+- If caption_lang != spoken_lang: after Whisper transcription, call GPT translation to caption_lang.
+
+3. DATA PIPELINE
+- Save spoken_lang and caption_lang in KV storage with the job_id.
+- Store final transcript with metadata: transcript_lang and target_caption_lang.
+
+4. OUTPUT DELIVERY
+- /status?job_id=<id> should return transcript + {"spoken_lang": "...", "caption_lang": "..."}
+- If translated: mark transcript as "(Translated from X → Y)".
+
+5. GUARDRAILS
+- Explicitly log all jobs with spoken_lang + caption_lang in KV for audit.
+- Ensure unsubscribe footer is included in emails.
+- Add admin alert if Whisper fails language auto-detect or translation exceeds $0.50 cost.
+
+6. TESTING
+- Run local POST /process with:
+  {"session_id":"test123","video_url":"https://...","spoken_lang":"auto","caption_lang":"Spanish"}
+- Confirm transcript returns in Spanish if video is in English.
+- Validate disclaimer appears correctly in checkout page.
+
+This ensures customers have maximum clarity, 99 language support, and accurate captions with Whisper + GPT translation.

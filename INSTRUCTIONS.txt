@@ -1,0 +1,39 @@
+# AutoCaption Pro – Site Setup Instructions
+
+## Files in this Package
+- index.html → The landing page with improved design (YouTube URL input, language detection, output selection, preview, pricing, outputs card).
+
+## Agent Setup Steps
+1. **Local Preview**
+   - Open `index.html` in your browser to confirm layout.
+
+2. **Push to GitHub**
+   - Create a new GitHub repository named `autocaptionpro-site` (or similar).
+   - In your terminal:
+     ```bash
+     git init
+     git remote add origin https://github.com/YOUR_USERNAME/autocaptionpro-site.git
+     git add index.html
+     git commit -m "Initial commit: AutoCaption Pro site mockup"
+     git branch -M main
+     git push -u origin main
+     ```
+
+3. **GitHub Pages Hosting**
+   - In the GitHub repository → Settings → Pages → Select branch `main` and folder `/ (root)`.
+   - Save → Your site will be live at `https://YOUR_USERNAME.github.io/autocaptionpro-site/`.
+
+4. **Challenges to Push**
+   - **Responsiveness:** Ensure the layout scales properly on mobile devices.
+   - **Stripe Integration:** Replace the dummy button with a working Stripe checkout link.
+   - **Backend Hook:** Connect the YouTube URL + Email fields to your backend/Whisper pipeline.
+   - **Dynamic Preview:** Replace static preview text with real auto-generated snippet (first 20 seconds).
+   - **Language Detection:** Replace hardcoded "English" with auto-detect logic (Whisper).
+   - **Output Files:** Ensure `.srt`, `.txt`, and optional video captions are generated and emailed.
+
+5. **Next Steps**
+   - Test site on GitHub Pages.
+   - Confirm inputs, tiers, and checkout flow work as expected.
+   - Collect first users for trial and feedback.
+
+---

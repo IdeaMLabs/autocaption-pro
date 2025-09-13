@@ -4,280 +4,197 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AutoCaption Pro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #f5f7fa;
       margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: #f9fafc;
-      color: #222;
-    }
-    header {
-      background: #2563eb;
-      color: white;
-      padding: 2rem;
-      text-align: center;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2.5rem;
-    }
-    header p {
-      font-size: 1.2rem;
-      margin-top: .5rem;
-    }
-    .hero {
-      text-align: center;
-      padding: 3rem 1rem;
-    }
-    .hero h2 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-    .steps {
+      padding: 0;
       display: flex;
       justify-content: center;
-      gap: 2rem;
-      margin: 3rem auto;
-      max-width: 900px;
-      text-align: center;
+      align-items: center;
+      min-height: 100vh;
     }
-    .step {
-      background: white;
+    .container {
+      background: #fff;
+      padding: 2rem 3rem;
       border-radius: 10px;
-      padding: 1.5rem;
-      flex: 1;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .step h3 {
-      margin-top: 0;
-    }
-    .language-selection {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
       max-width: 600px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .language-selection h3 {
-      margin-top: 0;
-      margin-bottom: 1.5rem;
-      text-align: center;
-      color: #2563eb;
-    }
-    .language-selection label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      color: #374151;
-    }
-    .language-selection select {
       width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 6px;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      color: #333;
+    }
+    h2 {
       font-size: 1rem;
-      background: white;
+      text-align: center;
+      color: #666;
+      margin-bottom: 1.5rem;
     }
-    .language-selection select:focus {
-      outline: none;
-      border-color: #2563eb;
-    }
-    .disclaimer {
-      background: #f3f4f6;
-      padding: 1rem;
-      border-radius: 6px;
+    label {
+      display: block;
       margin-top: 1rem;
       font-size: 0.9rem;
-      color: #6b7280;
-      border-left: 4px solid #2563eb;
+      color: #555;
     }
-    .cta {
+    input {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    .video-lang, .output-lang {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+    .divider {
+      margin: 1.5rem 0;
+      border-top: 1px solid #ccc;
+    }
+    .checkboxes label {
+      display: inline-block;
+      margin: 0.3rem 1rem 0.3rem 0;
+    }
+    .preview {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 1rem;
+      background: #fafafa;
+    }
+    .preview-col {
+      width: 48%;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+    .note {
+      font-size: 0.8rem;
+      color: #666;
       text-align: center;
-      margin: 2rem;
+      margin-top: 0.5rem;
+    }
+    .what-you-get {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f0f4f9;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .what-you-get span {
+      display: block;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+    .tiers {
+      display: flex;
+      justify-content: space-between;
+      margin: 1.5rem 0;
+    }
+    .tier {
+      flex: 1;
+      background: #f0f4f9;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin: 0 0.3rem;
+      padding: 0.7rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tier:hover {
+      border-color: #0077ff;
+      background: #e8f2ff;
     }
     button {
-      background: #2563eb;
-      color: white;
+      width: 100%;
+      padding: 1rem;
+      background: #0077ff;
+      color: #fff;
       border: none;
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
-      border-radius: 8px;
+      border-radius: 6px;
+      font-size: 1rem;
       cursor: pointer;
-      transition: background .3s;
+      transition: background 0.2s ease;
     }
     button:hover {
-      background: #1e4fbf;
+      background: #005fcc;
     }
-    footer {
-      background: #f3f4f6;
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
+    .trust {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
       color: #555;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>AutoCaption Pro</h1>
-    <p>Professional captions for YouTubers, powered by AI</p>
-  </header>
+  <div class="container">
+    <h1>Upload. Pay. Get Perfect Captions in Minutes.</h1>
+    <h2>Preview before purchase. Receive full captions in your chosen language(s).</h2>
 
-  <section class="hero">
-    <h2>Save hours editing. Get captions instantly.</h2>
-    <p>Our AI captions your YouTube videos in 30+ languages. Secure. Fast. Affordable.</p>
-  </section>
+    <label><strong>Step 1: Paste Your YouTube Link</strong></label>
+    <input type="url" placeholder="https://www.youtube.com/watch?v=...">
 
-  <section class="steps">
-    <div class="step">
-      <h3>1. Checkout</h3>
-      <p>Pay securely with Stripe for your chosen plan.</p>
+    <label>Email</label>
+    <input type="email" placeholder="you@example.com">
+
+    <div class="video-lang">
+      <strong>Video Language (detected):</strong>
+      <div>English (auto-detected) ▼</div>
     </div>
-    <div class="step">
-      <h3>2. Upload</h3>
-      <p>Paste your YouTube link. No files, no hassle.</p>
+
+    <div class="divider"></div>
+
+    <div class="output-lang">
+      <strong>Generate Captions In:</strong>
+      <div class="checkboxes">
+        <label><input type="checkbox"> English</label>
+        <label><input type="checkbox"> Spanish</label>
+        <label><input type="checkbox"> French</label>
+        <label><input type="checkbox"> German</label>
+      </div>
     </div>
-    <div class="step">
-      <h3>3. Download</h3>
-      <p>Receive professional captions ready for upload.</p>
+
+    <div class="preview">
+      <div class="preview-col">
+        <strong>[Original: English]</strong><br>
+        00:00:01 → Welcome to my channel!<br>
+        00:00:07 → Here are the 3 tips…
+      </div>
+      <div class="preview-col">
+        <strong>[Captions: Spanish]</strong><br>
+        00:00:01 → ¡Bienvenidos a mi canal!<br>
+        00:00:07 → Aquí están los 3 consejos…
+      </div>
     </div>
-  </section>
+    <div class="note">Preview only – full captions unlock after payment.</div>
 
-  <!-- LANGUAGE SELECTION BLOCK -->
-  <div class="language-selection">
-    <h3>Language Options</h3>
+    <div class="what-you-get">
+      <strong>What You Get:</strong>
+      <span>📄 .srt file (YouTube ready)</span>
+      <span>📝 .txt transcript (editable)</span>
+      <span>🎬 Video captions (optional)</span>
+    </div>
 
-    <!-- SPOKEN LANGUAGE -->
-    <label for="spoken_lang">What language is the audio in your video?</label>
-    <select id="spoken_lang" name="spoken_lang">
-      <option value="auto" selected>Auto Detect (Whisper decides)</option>
-      <option value="en">English</option>
-      <option value="es">Spanish</option>
-      <option value="fr">French</option>
-      <option value="de">German</option>
-      <option value="zh">Chinese</option>
-      <option value="ja">Japanese</option>
-      <option value="ko">Korean</option>
-      <option value="pt">Portuguese</option>
-      <option value="ru">Russian</option>
-      <option value="it">Italian</option>
-      <option value="nl">Dutch</option>
-      <option value="sv">Swedish</option>
-      <option value="da">Danish</option>
-      <option value="no">Norwegian</option>
-      <option value="fi">Finnish</option>
-      <option value="pl">Polish</option>
-      <option value="cs">Czech</option>
-      <option value="sk">Slovak</option>
-      <option value="hu">Hungarian</option>
-      <option value="ro">Romanian</option>
-      <option value="bg">Bulgarian</option>
-      <option value="hr">Croatian</option>
-      <option value="sl">Slovenian</option>
-      <option value="et">Estonian</option>
-      <option value="lv">Latvian</option>
-      <option value="lt">Lithuanian</option>
-      <option value="uk">Ukrainian</option>
-      <option value="be">Belarusian</option>
-      <option value="el">Greek</option>
-      <option value="tr">Turkish</option>
-      <option value="ar">Arabic</option>
-      <option value="he">Hebrew</option>
-      <option value="hi">Hindi</option>
-      <option value="th">Thai</option>
-      <option value="vi">Vietnamese</option>
-      <option value="id">Indonesian</option>
-      <option value="ms">Malay</option>
-      <option value="tl">Filipino</option>
-    </select>
+    <div class="tiers">
+      <div class="tier">Test Tier<br>$1<br><small>Up to 10 minutes</small></div>
+      <div class="tier">Standard<br>$5<br><small>Up to 30 minutes</small></div>
+      <div class="tier">Pro<br>$10<br><small>Up to 60 minutes</small></div>
+    </div>
 
-    <!-- CAPTION LANGUAGE -->
-    <label for="caption_lang">What language do you want the captions in?</label>
-    <select id="caption_lang" name="caption_lang">
-      <option value="en" selected>English</option>
-      <option value="es">Spanish</option>
-      <option value="fr">French</option>
-      <option value="de">German</option>
-      <option value="zh">Chinese</option>
-      <option value="ja">Japanese</option>
-      <option value="ko">Korean</option>
-      <option value="pt">Portuguese</option>
-      <option value="ru">Russian</option>
-      <option value="it">Italian</option>
-      <option value="nl">Dutch</option>
-      <option value="sv">Swedish</option>
-      <option value="da">Danish</option>
-      <option value="no">Norwegian</option>
-      <option value="fi">Finnish</option>
-      <option value="pl">Polish</option>
-      <option value="cs">Czech</option>
-      <option value="sk">Slovak</option>
-      <option value="hu">Hungarian</option>
-      <option value="ro">Romanian</option>
-      <option value="bg">Bulgarian</option>
-      <option value="hr">Croatian</option>
-      <option value="sl">Slovenian</option>
-      <option value="et">Estonian</option>
-      <option value="lv">Latvian</option>
-      <option value="lt">Lithuanian</option>
-      <option value="uk">Ukrainian</option>
-      <option value="be">Belarusian</option>
-      <option value="el">Greek</option>
-      <option value="tr">Turkish</option>
-      <option value="ar">Arabic</option>
-      <option value="he">Hebrew</option>
-      <option value="hi">Hindi</option>
-      <option value="th">Thai</option>
-      <option value="vi">Vietnamese</option>
-      <option value="id">Indonesian</option>
-      <option value="ms">Malay</option>
-      <option value="tl">Filipino</option>
-    </select>
-
-    <p class="disclaimer">
-      📝 <strong>Important:</strong> We create text captions only (no voice-over). If you're unsure what language your video audio is in, choose "Auto Detect" and we'll figure it out automatically.
-    </p>
+    <button>Get Captions Now</button>
+    <div class="trust">🔒 Secure checkout with Stripe</div>
   </div>
-
-  <div class="cta">
-    <button id="checkout-button">Get Captions – $1 Test</button>
-  </div>
-
-  <footer>
-    <p>© 2025 AutoCaption Pro · Secure payments via Stripe</p>
-  </footer>
-
-  <!-- Stripe.js -->
-  <script src="https://js.stripe.com/v3/"></script>
-  <script>
-    const stripe = Stripe("pk_test_51S41DLK0wxQPIemdaalU9BVg1jjgj9CVioVGDpo76bO9jbAUr8bqACD4j6QA63hJcZX1VlSORYAvGNgtR313hXuX000dSfBOcj");
-    
-    document.getElementById("checkout-button").addEventListener("click", async () => {
-      const spokenLang = document.getElementById("spoken_lang").value;
-      const captionLang = document.getElementById("caption_lang").value;
-      
-      const res = await fetch("/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          spoken_lang: spokenLang, 
-          caption_lang: captionLang 
-        })
-      });
-      const session = await res.json();
-      
-      if (session.url) {
-        window.location.href = session.url;
-      } else if (session.id) {
-        const result = await stripe.redirectToCheckout({ sessionId: session.id });
-        if (result.error) alert(result.error.message);
-      } else {
-        alert("Error creating checkout session.");
-      }
-    });
-  </script>
 </body>
 </html>

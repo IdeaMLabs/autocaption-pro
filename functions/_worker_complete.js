@@ -60,8 +60,8 @@ export default {
 
         const stripeData = new URLSearchParams({
           'mode': 'payment',
-          'success_url': 'https://autocaption-pro.pages.dev/success.html',
-          'cancel_url': 'https://autocaption-pro.pages.dev/cancel.html',
+          'success_url': 'https://autocaptionpro.com/success.html',
+          'cancel_url': 'https://autocaptionpro.com/cancel.html',
           'customer_email': email,
           'line_items[0][price]': price_id,
           'line_items[0][quantity]': '1',

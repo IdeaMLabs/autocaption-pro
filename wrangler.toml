@@ -1,3 +1,20 @@
 name = "autocaption-worker"
-main = "functions/_worker.js"
-compatibility_date = "2023-09-06"
+main = "worker.js"
+compatibility_date = "2023-09-01"
+
+# Daily automation at 6 AM UTC plus spend control every 10 min
+[triggers]
+crons = ["0 6 * * *", "*/10 * * * *", "0 0 * * *"]
+
+[[kv_namespaces]]
+binding = "YOUTUBER_KV"
+id = "9308f8a21a524f6ea7bea6cb9338ba38"
+
+# Environment variables
+[vars]
+SCORE_THRESHOLD = "50"
+ADMIN_EMAIL = "ideamlabs@gmail.com"
+DAILY_OPENAI_CAP_USD = "10"
+SOFT_CAP_USD = "8"
+COST_PER_MIN_EST_USD = "0.006"
+COST_PER_1K_TOKENS_USD = "0.002"

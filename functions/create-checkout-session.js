@@ -31,8 +31,8 @@ export default {
           "line_items[0][price_data][product_data][name]": "AutoCaption Pro",
           "line_items[0][quantity]": "1",
           customer_email: email,
-          success_url: "https://autocaption-pro.pages.dev/success",
-          cancel_url: "https://autocaption-pro.pages.dev/cancel",
+          success_url: "https://autocaptionpro.com/success",
+          cancel_url: "https://autocaptionpro.com/cancel",
           "metadata[video_url]": video_url,
           "metadata[tier]": tier,
           "metadata[email]": email

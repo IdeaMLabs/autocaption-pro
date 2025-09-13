@@ -1,0 +1,11 @@
+# Cloudflare Pages Redirects File
+# This file handles 301 redirects from old domain to new domain
+
+# Redirect old Pages domain to new custom domain
+https://autocaption-pro.pages.dev/* https://autocaptionpro.com/:splat 301!
+
+# Redirect old worker subdomain to new domain API endpoints  
+https://autocaption-worker.ideamlabs.workers.dev/* https://api.autocaptionpro.com/:splat 301!
+
+# Ensure www redirects to non-www
+https://www.autocaptionpro.com/* https://autocaptionpro.com/:splat 301!
